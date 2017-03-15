@@ -223,28 +223,30 @@ def C3D_conv_features(summary=False):
         print(model.summary())
     return model
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Extract video features using C3D network')
-    parser.add_argument('-d', '--videos-dir', type=str, dest='directory',
-        default='data/videos', help='videos directory (default: %(default)s)')
-    parser.add_argument('-o', '--output-dir', type=str, dest='output',
-        default='data/dataset', help='directory where to store the extracted features (default: %(default)s)')
-    parser.add_argument('-b', '--batch-size', type=int, dest='batch_size',
-        default=32, help='batch size when extracting features (default: %(default)s)')
-    parser.add_argument('-t', '--num-threads', type=int, dest='num_threads',
-        default=8, help='number of threads to fetch videos (default: %(default)s)')
-    parser.add_argument('-q', '--queue-size', type=int, dest='queue_size',
-        default=12, help='maximum number of elements at the queue when fetching videos (default %(default)s)')
-    parser.add_argument('-g', '--num-gpus', type=int, dest='num_gpus',
-        default=1, help='number of gpus to use for extracting features (default: %(default)s)')
 
-    args = parser.parse_args()
 
-    extract_features(
-        args.directory,
-        args.output,
-        args.batch_size,
-        args.num_threads,
-        args.queue_size,
-        args.num_gpus
-)
+
+from featureExtraction import videoProperties
+input_size = (112, 112)
+length = 16
+input_video = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/LIRIS-ACCEDE-continuous-movies/continuous-movies/After_The_Rain.mp4'
+
+# Load labels
+#with open('dataset/labels.txt', 'r') as f:
+    #labels = import_labels(f)
+print('Reading Video...')
+video_array = videoProperties.video_to_array(input_video, resize=input_size)
+if video_array is None:
+    raise Exception('The video could not be read')
+
+
+
+videos_dir = ''
+output_dir = ''
+batch_size = ''
+num_threads = ''
+queue_size = ''
+num_gpus = ''
+
+
+#extract_features(videos_dir, output_dir, batch_size, num_threads, queue_size, num_gpus)

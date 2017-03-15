@@ -1,6 +1,6 @@
 # EMOTIONAL IMPACT OF MOVIES
 
-One Paragraph of project description goes here
+The prediction of the emotional impact of movies is here considered as the prediction of the expected emotion. The expected emotion is the emotion that the majority of the audience feels in response to the same content. In other words, the expected emotion is the expected value of experienced (i.e. induced) emotion in a population. While the induced emotion is subjective and context dependent, the expected emotion can be considered objective, as it reflects the more-or-less unanimous response of a general audience to a given stimulus 
 
 ## Getting Started
 
