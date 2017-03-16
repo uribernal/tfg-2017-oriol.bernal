@@ -105,15 +105,19 @@ def get_duration(video_path):
     return duration
 
 
-video_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/LIRIS-ACCEDE-continuous-movies/continuous-movies/Norm.mp4'
+video_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/LIRIS-ACCEDE-continuous-movies/continuous-movies/Spaceman.avi'
 
 # Capture video from file
-cap = cv2.VideoCapture('video_path')
+cap = cv2.VideoCapture(video_path)
+if not cap.isOpened():
+    cap.open(video_path)
+    print('in')
 
 while True:
 
     ret, frame = cap.read()
-
+    print(ret)
+    print(frame)
     if ret == True:
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -128,7 +132,9 @@ while True:
         break
 
 cap.release()
-cv2.destroyAllWindows()
+#cv2.destroyAllWindows()
+
+
 video_path2 = 'After_The_Rain.mp4'
 
 #video_to_array(video_path)
