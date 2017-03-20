@@ -1,11 +1,11 @@
 import threading
 import time
-
+import cv2
 import numpy as np
 
 
 def import_labels(f):
-    ''' Read from a file all the labels from it '''
+    """ Read from a file all the labels from it """
     lines = f.readlines()
     labels = []
     i = 0
@@ -18,20 +18,21 @@ def import_labels(f):
     return labels
 
 def to_categorical(y, nb_classes=None):
-    ''' Convert class vector (integers from 0 to nb_classes)
-    to binary class matrix, for use with categorical_crossentropy.
-    '''
+    """Convert class vector (integers from 0 to nb_classes)
+    to binary class matrix, for use with categorical_crossentropy."""
+
     if not nb_classes:
-        nb_classes = np.max(y)+1
+        nb_classes = np.max(y) + 1
     Y = np.zeros((len(y), nb_classes))
     for i in range(len(y)):
         Y[i, y[i]] = 1.
     return Y
 
+
 def generate_output(video_info, labels, length=16):
-    ''' Given the info of the vide, generate a vector of classes corresponding the output for each
+    """ Given the info of the vide, generate a vector of classes corresponding the output for each
     clip of the video which features have been extracted.
-    '''
+    """
     nb_frames = video_info['num_frames']
     last_first_name = nb_frames - length + 1
 
@@ -53,7 +54,7 @@ def generate_output(video_info, labels, length=16):
         # Obtain the label for this isntance and then its output
         output = None
 
-        outs = outputs[start_frame:start_frame+length]
+        outs = outputs[start_frame:start_frame + length]
         if outs.count(label) >= length / 2:
             output = labels.index(label)
         else:
@@ -62,12 +63,14 @@ def generate_output(video_info, labels, length=16):
 
     return instances
 
-class VideoGenerator(object):
 
+class VideoGenerator(object):
     def __init__(self, videos, stored_videos_path,
-            stored_videos_extension, length, input_size):
+                 stored_videos_extension, length, input_size):
         self.videos = videos
-        self.total_nb_videos = len(videos)
+        print(videos[0])
+        print(type(videos))
+        self.total_nb_videos = len(self.videos)
         self.flow_generator = self._flow_index(self.total_nb_videos)
         self.lock = threading.Lock()
         self.stored_videos_path = stored_videos_path
@@ -79,7 +82,7 @@ class VideoGenerator(object):
         pointer = 0
         while pointer < total_nb_videos:
             pointer += 1
-            yield pointer-1
+            yield pointer - 1
 
     def next(self):
         with self.lock:
@@ -93,19 +96,20 @@ class VideoGenerator(object):
             vid_array = vid_array.transpose(1, 0, 2, 3)
             nb_frames = vid_array.shape[0]
             nb_instances = nb_frames // self.length
-            vid_array = vid_array[:nb_instances*self.length,:,:,:]
-            vid_array = vid_array.reshape((nb_instances, self.length, 3,)+(self.input_size))
+            vid_array = vid_array[:nb_instances * self.length, :, :, :]
+            vid_array = vid_array.reshape((nb_instances, self.length, 3,) + (self.input_size))
             vid_array = vid_array.transpose(0, 2, 1, 3, 4)
         t2 = time.time()
-        print('Time to fetch {} video: {:.2f} seconds'.format(video_id, t2-t1))
+        print('Time to fetch {} video: {:.2f} seconds'.format(video_id, t2 - t1))
         return video_id, vid_array
 
     def __next__(self):
         self.next()
 
+
 def video_to_array(video_path, resize=None, start_frame=0, end_frame=None,
                    length=None, dim_ordering='th'):
-    ''' Convert the video at the path given in to an array
+    """ Convert the video at the path given in to an array
     Args:
         video_path (string): path where the video is stored
         resize (Optional[tupple(int)]): desired size for the output video.
@@ -123,7 +127,7 @@ def video_to_array(video_path, resize=None, start_frame=0, end_frame=None,
                          (temporal), height, width.
     Raises:
         Exception: If the video could not be opened
-    '''
+    """
 
     if cv2.__version__ >= '3.0.0':
         CAP_PROP_FRAME_COUNT = cv2.CAP_PROP_FRAME_COUNT
@@ -173,7 +177,7 @@ def video_to_array(video_path, resize=None, start_frame=0, end_frame=None,
 
 
 def get_num_frames(video_path):
-    ''' Return the number of frames of the video track of the video given '''
+    """ Return the number of frames of the video track of the video given """
     if cv2.__version__ >= '3.0.0':
         CAP_PROP_FRAME_COUNT = cv2.CAP_PROP_FRAME_COUNT
     else:
@@ -186,8 +190,9 @@ def get_num_frames(video_path):
     num_frames = int(cap.get(CAP_PROP_FRAME_COUNT))
     return num_frames
 
+
 def get_duration(video_path):
-    ''' Return the duration of the video track of the video given '''
+    """ Return the duration of the video track of the video given """
     if cv2.__version__ >= '3.0.0':
         CAP_PROP_FRAME_COUNT = cv2.CAP_PROP_FRAME_COUNT
         CAP_PROP_FPS = cv2.CAP_PROP_FPS
@@ -195,7 +200,7 @@ def get_duration(video_path):
         CAP_PROP_FRAME_COUNT = cv2.cv.CV_CAP_PROP_FRAME_COUNT
         CAP_PROP_FPS = cv2.cv.CV_CAP_PROP_FPS
 
-    cap = cv2.CaptureFromFile(video_path)
+    cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise Exception('Could not open the video')
     num_frames = int(cap.get(CAP_PROP_FRAME_COUNT))
@@ -204,3 +209,15 @@ def get_duration(video_path):
     # When everything done, release the capture
     cap.release()
     return duration
+
+
+vids = ['After_The_Rain', 'Attitude_Matters']
+path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/LIRIS-ACCEDE-continuous-movies/continuous-movies/'
+ext = '.mp4'
+
+len = [get_duration(path + vids[0] + ext), get_duration(path + vids[1] + ext)]
+
+input_size = [get_num_frames(path + vids[0] + ext), get_num_frames(path + vids[1] + ext)]
+
+a = VideoGenerator(vids, path, ext, len, input_size)
+print(a)

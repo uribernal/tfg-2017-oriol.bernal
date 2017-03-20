@@ -19,3 +19,6 @@ plt.plot(MSE_VALENCE)
 plt.plot(min_v, min(MSE_VALENCE),'ro')
 
 plt.show()
+
+
+
