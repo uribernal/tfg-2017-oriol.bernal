@@ -219,5 +219,5 @@ len = [get_duration(path + vids[0] + ext), get_duration(path + vids[1] + ext)]
 
 input_size = [get_num_frames(path + vids[0] + ext), get_num_frames(path + vids[1] + ext)]
 
-a = VideoGenerator(vids, path, ext, len, input_size)
+a = VideoGenerator(vids[0], path, ext, len[0], input_size[0])
 print(a)
