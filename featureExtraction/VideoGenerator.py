@@ -190,6 +190,34 @@ def get_num_frames(video_path):
     num_frames = int(cap.get(CAP_PROP_FRAME_COUNT))
     return num_frames
 
+def get_height(video_path):
+    """ Return the height of the frames of the video"""
+    if cv2.__version__ >= '3.0.0':
+        CAP_HEIGHT = cv2.CAP_PROP_FRAME_HEIGHT
+    else:
+        CAP_HEIGHT = cv2.cv.CAP_PROP_FRAME_HEIGHT
+
+    cap = cv2.VideoCapture(video_path)
+
+    if not cap.isOpened():
+        raise Exception('Could not open the video')
+    height = int(cap.get(CAP_HEIGHT))
+    return height
+
+def get_width(video_path):
+    """ Return the weight of the frames of the video"""
+    if cv2.__version__ >= '3.0.0':
+        CAP_WIDTH = cv2.CAP_PROP_FRAME_WIDTH
+    else:
+        CAP_WIDTH = cv2.cv.CAP_PROP_FRAME_WIDTH
+
+    cap = cv2.VideoCapture(video_path)
+
+    if not cap.isOpened():
+        raise Exception('Could not open the video')
+    width = int(cap.get(CAP_WIDTH))
+    return width
+
 
 def get_duration(video_path):
     """ Return the duration of the video track of the video given """
@@ -211,13 +239,18 @@ def get_duration(video_path):
     return duration
 
 
+'''
 vids = ['After_The_Rain', 'Attitude_Matters']
 path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/LIRIS-ACCEDE-continuous-movies/continuous-movies/'
 ext = '.mp4'
 
 len = [get_duration(path + vids[0] + ext), get_duration(path + vids[1] + ext)]
+h = get_height(path + vids[0] + ext)
+w = get_width(path + vids[0] + ext)
+print((h,w))
 
 input_size = [get_num_frames(path + vids[0] + ext), get_num_frames(path + vids[1] + ext)]
-
+print(input_size)
 a = VideoGenerator(vids[0], path, ext, len[0], input_size[0])
 print(a)
+'''

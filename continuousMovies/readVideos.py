@@ -71,13 +71,17 @@ def getVideo(film: str, nb_frames: int, height: int, weight: int):
     video = video.reshape((height, weight, 3, nb_frames))
     return video
 
-def getVideos(films: list, nb_frames: int, height: int, weight: int):
+def getVideos(films: list, nb_frames: int, height: int, weight: int, num_films=None):
+    if num_films is None:
+        num_films = len(films)
     videos = np.array([])
     for i, film in enumerate(films):
         print (i, film)
         a = getVideo(film, nb_frames, height, weight)
         videos = np.append(videos, a)
-    videos = videos.reshape((nb_frames, height, weight, 3, len(films)))
+        if (i>=num_films-1):
+            break
+    videos = videos.reshape((nb_frames, height, weight, 3, num_films))
     return videos
 
 def getLongMovies():
@@ -97,7 +101,7 @@ def getLongMovies():
     print('FIN')
     return videos
 
-def getClips():
+def getClips(num_clips=None):
     ids, names, labels = getLabels()
     src = '/home/uribernal/Desktop/MediaEval2016/devset/clips/LIRIS-ACCEDE-data/data/'
     films = []
@@ -107,7 +111,7 @@ def getClips():
     nb_frames = 1
     height = 352
     weight = 624
-    videos = getVideos(films, nb_frames, height, weight)
+    videos = getVideos(films, nb_frames, height, weight, num_films=num_clips)
     print(videos.shape)
     print('FIN')
     return videos
@@ -125,8 +129,6 @@ def getInfoVideo(fn):
     return width, height, length, fps
 
 
-a = getInfoVideo('/home/uribernal/Desktop/MediaEval2016/devset/clips/LIRIS-ACCEDE-data/data/ACCEDE00006.mp4')
-print(a)
 
 
 

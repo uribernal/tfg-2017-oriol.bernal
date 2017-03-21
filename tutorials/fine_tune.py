@@ -239,7 +239,7 @@ a = os.popen(
 print(a.split('\n'))
 for g in a.split('\n')[:-1]:
     b = os.popen(
-        'ls /imatge/mcompri/Desktop/THESIS/Places-CNN/ESEMPIO_coffe2keras/keras-master/keras/caffe/modello_prova/training/images_training/' + g).read()  # test_prova = 1680 images  , test = 400 images
+        'ls /home/uribernal/Desktop/code/test/' + g).read()  # test_prova = 1680 images  , test = 400 images
 
     # b = os.popen( 'ls '+img_path).read()
     for p, i in enumerate(b.split('\n')[:-1]):
@@ -265,6 +265,9 @@ r = np.array(dataset)
 
 # train the model on the new data for a few epochs
 # model.fit_generator(...)
+print(model.input)
+print(trainFeatures.shape)
+print(r.shape)
 model.fit(trainFeatures, r, batch_size=32, nb_epoch=10, verbose=2)
 
 # at this point, the top layers are well trained and we can start fine-tuning

@@ -43,14 +43,24 @@ for layer in base_model.layers:
 model.compile(optimizer='rmsprop', loss='binary_crossentropy')
 
 # IMAGES LOAD
+from continuousMovies import readVideos
+videos = readVideos.getClips(100)
+print('-----------------videos.shape:')
+print(videos.shape)
+
 trainFeatures = np.array([])
 # LABELS LOAD
-r = np.array([])
+ids, names, labels = readVideos.getLabels()
+a = labels[:,2]
+r = a[:100]
+print('-----------------lab.shape')
+print(r.shape)
+#r = np.array([])
 
 
 # train the model on the new data for a few epochs
 #model.fit_generator(...)
-model.fit(trainFeatures,r,batch_size=32,nb_epoch=10,verbose=2)
+model.fit(trainFeatures, r, batch_size=32, nb_epoch=10, verbose=2)
 
 # at this point, the top layers are well trained and we can start fine-tuning
 # convolutional layers from inception V3. We will freeze the bottom N layers
