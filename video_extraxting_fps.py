@@ -89,6 +89,8 @@ def get_labels(film_name: str):
         valence = np.array(val)
         return arousal, valence
 
+
+
 def save_labels_arousal(movie: str):
     path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/LIRIS-ACCEDE-continuous-annotations/continuous-annotations/'
     extension = '_Arousal.txt'

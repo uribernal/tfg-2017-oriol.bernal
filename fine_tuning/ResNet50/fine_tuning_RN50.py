@@ -62,6 +62,7 @@ print(trainFeatures.shape)
 #model.fit_generator(...)
 model.fit(trainFeatures, r, batch_size=32, nb_epoch=10, verbose=2)
 
+
 # at this point, the top layers are well trained and we can start fine-tuning
 # convolutional layers from inception V3. We will freeze the bottom N layers
 # and train the remaining top layers.

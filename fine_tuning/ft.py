@@ -4,9 +4,6 @@ from keras.preprocessing import image
 from keras.optimizers import SGD
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-
 #Load Pre-trained model from model zoo
 #We load the pre-trained VGG16 model from the Keras model zoo and list out the various layers in it.
 #First time you invoke the VGG16 constructor, it will download the trained model to ~/.keras/models.

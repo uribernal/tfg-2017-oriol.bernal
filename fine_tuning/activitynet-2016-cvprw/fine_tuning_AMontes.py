@@ -1,7 +1,6 @@
 import argparse
 import os
 import sys
-
 import h5py
 
 from keras.layers import LSTM, BatchNormalization, Dense, Dropout, Input, TimeDistributed
