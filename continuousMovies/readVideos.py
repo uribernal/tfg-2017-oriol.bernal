@@ -81,7 +81,7 @@ def getVideos(films: list, nb_frames: int, height: int, weight: int, num_films=N
         videos = np.append(videos, a)
         if (i>=num_films-1):
             break
-    videos = videos.reshape((nb_frames, height, weight, 3, num_films))
+    videos = videos.reshape((nb_frames, num_films, height, weight, 3))
     return videos
 
 def getLongMovies():
@@ -109,8 +109,8 @@ def getClips(num_clips=None):
         films.append(src+name)
     print(len(films))
     nb_frames = 1
-    height = 352
-    weight = 624
+    height = 224
+    weight = 224
     videos = getVideos(films, nb_frames, height, weight, num_films=num_clips)
     print(videos.shape)
     print('FIN')

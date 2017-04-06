@@ -48,7 +48,7 @@ videos = readVideos.getClips(100)
 print('-----------------videos.shape:')
 print(videos.shape)
 
-trainFeatures = np.array([])
+trainFeatures = videos[0,:,:,:,:]
 # LABELS LOAD
 ids, names, labels = readVideos.getLabels()
 a = labels[:,2]
@@ -57,7 +57,7 @@ print('-----------------lab.shape')
 print(r.shape)
 #r = np.array([])
 
-
+print(trainFeatures.shape)
 # train the model on the new data for a few epochs
 #model.fit_generator(...)
 model.fit(trainFeatures, r, batch_size=32, nb_epoch=10, verbose=2)
