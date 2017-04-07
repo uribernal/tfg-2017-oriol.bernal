@@ -12,6 +12,7 @@ from keras.layers import LSTM, BatchNormalization, Dense, Dropout, Input, TimeDi
 from keras.models import Model
 from keras.optimizers import Adam
 import matplotlib.pyplot as plt
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 
 def vector_transform(vector1, l2):
 
@@ -104,11 +105,11 @@ def lstm_emotion(batch_size, dropout_probability, summary=False):
 
     input_features = Input(batch_shape=(batch_size, 1, 201,), name='features')
     input_normalized = BatchNormalization(name='normalization')(input_features)
-    input_dropout = Dropout(p=dropout_probability)(input_normalized)
+    input_dropout = Dropout(dropout_probability)(input_normalized)
     lstm = LSTM(512, return_sequences=True, stateful=True, name='lsmt1')(input_dropout)
-    output_dropout = Dropout(p=dropout_probability)(lstm)
+    output_dropout = Dropout(dropout_probability)(lstm)
     output = TimeDistributed(Dense(1, activation='tanh'), name='fc')(output_dropout)
-    model = Model(input=input_features, output=output)
+    model = Model(inputs=input_features, outputs=output)
 
     if summary:
         model.summary()
@@ -159,11 +160,28 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
                   optimizer=optimizer)
     print('Model Compiled!')
 
+    # Callbacks
+    stop_patience = 100
+    model_checkpoint = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/fine_tuning/albertoswork/checkpoints/' + \
+                       store_weights_file.format(experiment_id=experiment_id, epoch=epochs)
+
+    checkpointer = ModelCheckpoint(filepath=model_checkpoint,
+                                   verbose=1,
+                                   save_best_only=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss',
+                                  factor=0.1,
+                                  patience=5,
+                                  min_lr=0,
+                                  verbose=1)
+
+    early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=stop_patience)
+    # cooldown=stop_cooldown)
+
+
+
     # Training
     train_loss = []
     validation_loss = []
-    #train_accuracy = []
-    #validation_accuracy = []
     for i in range(1, epochs + 1):
         print('Epoch {0}/{1}'.format(i, epochs))
 
@@ -172,13 +190,12 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
                   batch_size=batch_size,  # Number of samples per gradient update.
                   validation_data=(x_validation, y_validation),
                   verbose=2,  # 0 for no logging to stdout, 1 for progress bar logging, 2 for one log line per epoch.
-                  nb_epoch=1,
+                  epochs=1,
+                  callbacks=[checkpointer, reduce_lr, early_stop],
                   shuffle=False)
 
         train_loss.extend(history.history['loss'])
         validation_loss.extend(history.history['val_loss'])
-        #train_accuracy.extend(history.history['acc'])
-        #validation_accuracy.extend(history.history['val_acc'])
 
         print('Reseting model states')
         model.reset_states()
@@ -200,4 +217,12 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
 #train_model(106,100,.5,256,1e-4)
 #train_model(107,100,.5,256,1e-5)
 #train_model(108,100,.5,256,1e-6)
-train_model(109,500,.5,64,1e-4)
+#train_model(109,500,.5,64,1e-4)
+import time
+from helper import bot
+start = time.time()
+train_model(110,500,.5,32,1e-3)
+end = time.time()
+bot.sendImage(110, 500)
+elapsed = end - start
+bot.sendElapsedTime(elapsed)

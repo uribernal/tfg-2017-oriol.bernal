@@ -6,12 +6,15 @@ C3D model from Alberto's work
 
 import h5py
 import os
+
+
 from fine_tuning.albertoswork import video_extraxting_fps2 as db
 import numpy as np
 from keras.layers import LSTM, BatchNormalization, Dense, Dropout, Input, TimeDistributed
 from keras.models import Model
 from keras.optimizers import Adam
 import matplotlib.pyplot as plt
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 
 
 def vector_transform(vector1, l2):
@@ -55,12 +58,12 @@ def lstm_emotion(batch_size, time_steps, dropout_probability, summary=False):
     '''
     input_features = Input(batch_shape=(batch_size, time_steps, 4096,), name='features')
     input_normalized = BatchNormalization(name='normalization')(input_features)
-    input_dropout = Dropout(p=dropout_probability)(input_normalized)
+    input_dropout = Dropout(dropout_probability)(input_normalized)
     lstm = LSTM(512, return_sequences=True, stateful=True, name='lsmt1')(input_dropout)
-    output_dropout = Dropout(p=dropout_probability)(lstm)
+    output_dropout = Dropout(dropout_probability)(lstm)
     output = TimeDistributed(Dense(1, activation='tanh'), name='fc')(output_dropout)
 
-    model = Model(input=input_features, output=output)
+    model = Model(inputs=input_features, outputs=output)
 
     if summary:
         model.summary()
@@ -177,6 +180,25 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time
                   optimizer=optimizer)
     print('Model Compiled!')
 
+
+    # Callbacks
+    stop_patience = 100
+    model_checkpoint = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/fine_tuning/albertoswork/checkpoints/'+\
+                       store_weights_file.format(experiment_id=experiment_id, epoch=epochs)
+
+    checkpointer = ModelCheckpoint(filepath=model_checkpoint,
+                                   verbose=1,
+                                   save_best_only=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss',
+                                  factor=0.1,
+                                  patience=5,
+                                  min_lr=0,
+                                  verbose=1)
+
+    early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=stop_patience)
+    # cooldown=stop_cooldown)
+
+
     # Training
     train_loss = []
     validation_loss = []
@@ -190,7 +212,8 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time
                   batch_size=batch_size,  # Number of samples per gradient update.
                   validation_data=(x_validation, y_validation),
                   verbose=2,  # 0 for no logging to stdout, 1 for progress bar logging, 2 for one log line per epoch.
-                  nb_epoch=1,
+                  epochs=1,
+                  callbacks=[checkpointer, reduce_lr, early_stop],
                   shuffle=False)
 
         train_loss.extend(history.history['loss'])
@@ -330,8 +353,6 @@ end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
 
-'''
-
 bot.sendMessage('Trainning: train_model(14, 500, .5, 32, 1e-3, 1)') #model 1
 start = time.time()
 train_model(14, 500, .5, 32, 1e-3, 1)
@@ -339,3 +360,13 @@ bot.sendImage(14, 500)
 end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
+'''
+
+bot.sendMessage('Trainning: train_model(15, 500, .5, 32, 1e-3, 1)') #model 1
+start = time.time()
+train_model(15, 500, .5, 32, 1e-3, 1)
+end = time.time()
+bot.sendImage(15, 500)
+elapsed = end - start
+bot.sendElapsedTime(elapsed)
+
