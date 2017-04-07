@@ -191,6 +191,13 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
 
     save_plots(epochs, train_loss, validation_loss, experiment_id)
 
+#train_model(100,100,.5,256,1e-5)
 #train_model(101,500,.5,256,1e-5)
-#train_model(101,500,.5,256,1e-5)
-train_model(102,150,.5,32,1e-3)
+#train_model(102,150,.5,32,1e-3)
+#train_model(103,100,.5,128,1e-5)
+#train_model(104,100,.5,64,1e-5)
+#train_model(105,100,.5,32,1e-5)
+#train_model(106,100,.5,256,1e-4)
+#train_model(107,100,.5,256,1e-5)
+#train_model(108,100,.5,256,1e-6)
+train_model(109,500,.5,64,1e-4)

@@ -38,8 +38,9 @@ def lstm_emotion(batch_size, time_steps, dropout_probability, summary=False):
     #model = Sequential()
     #model.add(LSTM(512, input_shape=(1, 4096)))
 
+
+    #A partir de l'experiment 7! (inclos)
     '''
-    A partir de l'experiment 5! (inclos)
     input_features = Input(batch_shape=(batch_size, time_steps, 4096), name='features')
     input_normalized = BatchNormalization(name='normalization')(input_features)
     input_dropout = Dropout(p=dropout_probability)(input_normalized)
@@ -60,6 +61,7 @@ def lstm_emotion(batch_size, time_steps, dropout_probability, summary=False):
     output = TimeDistributed(Dense(1, activation='tanh'), name='fc')(output_dropout)
 
     model = Model(input=input_features, output=output)
+
     if summary:
         model.summary()
     return model
@@ -211,7 +213,7 @@ from helper import bot
 import time
 
 '''
-bot.sendMessage('Trainning: train_model(0, 100, .5, 256, 1e-5, 1)')
+bot.sendMessage('Trainning: train_model(0, 100, .5, 256, 1e-5, 1)')#model 1
 start = time.time()
 train_model(0, 100, .5, 256, 1e-5, 1)
 bot.sendImage(0, 100)
@@ -219,7 +221,7 @@ end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
 
-bot.sendMessage('Trainning: train_model(1, 100, .5, 32, 1e-5, 1)')
+bot.sendMessage('Trainning: train_model(1, 100, .5, 32, 1e-5, 1)')#model 1
 start = time.time()
 train_model(1, 100, .5, 32, 1e-5, 1)
 bot.sendImage(1, 100)
@@ -227,7 +229,7 @@ end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
 
-bot.sendMessage('Trainning: train_model(2, 100, .3, 256, 1e-7, 1)')
+bot.sendMessage('Trainning: train_model(2, 100, .3, 256, 1e-7, 1)')#model 1
 start = time.time()
 train_model(2, 100, .3, 256, 1e-7, 1)
 bot.sendImage(2, 100)
@@ -236,7 +238,7 @@ elapsed = end - start
 bot.sendElapsedTime(elapsed)
 
 
-bot.sendMessage('Trainning: train_model(3, 100, .5, 256, 1e-5, 1)')
+bot.sendMessage('Trainning: train_model(3, 100, .5, 256, 1e-5, 1)')#model 1
 start = time.time()
 train_model(3, 100, .5, 256, 1e-3, 1)
 bot.sendImage(3, 100)
@@ -246,7 +248,7 @@ bot.sendElapsedTime(elapsed)
 
 
 
-bot.sendMessage('Trainning: train_model(4, 100, .5, 256, 1e-5, 1)')
+bot.sendMessage('Trainning: train_model(4, 100, .5, 256, 1e-5, 1)')#model 1
 start = time.time()
 train_model(4, 1000, .5, 32, 1e-7, 1)
 bot.sendImage(4, 1000)
@@ -254,8 +256,8 @@ end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
 
-'''
-bot.sendMessage('Trainning: train_model(5, 100, .5, 1, 1e-5, 1)')
+
+bot.sendMessage('Trainning: train_model(5, 100, .5, 1, 1e-5, 1)')#model 1
 start = time.time()
 train_model(5, 100, .5, 1, 1e-5, 1)
 bot.sendImage(5, 100)
@@ -263,7 +265,7 @@ end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
 
-bot.sendMessage('Trainning: train_model(6, 100, .5, 256, 1e-4, 1)')
+bot.sendMessage('Trainning: train_model(6, 100, .5, 256, 1e-4, 1)')#model 1
 start = time.time()
 train_model(6, 100, .5, 256, 1e-4, 1)
 bot.sendImage(6, 100)
@@ -271,62 +273,69 @@ end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
 
-'''
-
-
-
-
-
-
-
-
-
-
-bot.sendMessage('Trainning: train_model(5, 100, .5, 256, 1e-5, 1)')
+bot.sendMessage('Trainning: train_model(7, 100, .5, 256, 1e-5, 1)')#model 2
 start = time.time()
-train_model(5, 100, .5, 256, 1e-5, 1)
-bot.sendImage(5, 100)
-end = time.time()
-elapsed = end - start
-bot.sendElapsedTime(elapsed)
-
-bot.sendMessage('Trainning: train_model(6, 500, .5, 256, 1e-5, 1)')
-start = time.time()
-train_model(6, 500, .5, 256, 1e-5, 1)
-bot.sendImage(6, 500)
-end = time.time()
-elapsed = end - start
-bot.sendElapsedTime(elapsed)
-
-bot.sendMessage('Trainning: train_model(7, 100, .5, 256, 1e-7, 1)')
-start = time.time()
-train_model(7, 100, .5, 256, 1e-7, 1)
+train_model(7, 100, .5, 256, 1e-5, 1)
 bot.sendImage(7, 100)
 end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
 
-bot.sendMessage('Trainning: train_model(8, 500, .5, 256, 1e-7, 1)')
+bot.sendMessage('Trainning: train_model(8, 500, .5, 256, 1e-5, 1)')#model 2
 start = time.time()
-train_model(8, 500, .5, 256, 1e-7, 1)
+train_model(8, 500, .5, 256, 1e-5, 1)
 bot.sendImage(8, 500)
 end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
 
-bot.sendMessage('Trainning: train_model(9, 100, .5, 32, 1e-7, 1)')
+bot.sendMessage('Trainning: train_model(9, 100, .5, 256, 1e-7, 1)')#model 2
 start = time.time()
-train_model(9, 100, .5, 32, 1e-7, 1)
+train_model(9, 100, .5, 256, 1e-7, 1)
 bot.sendImage(9, 100)
 end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
 
-bot.sendMessage('Trainning: train_model(10, 500, .5, 32, 1e-7, 1)')
+bot.sendMessage('Trainning: train_model(10, 100, .5, 256, 1e-3, 1)')#model 2
 start = time.time()
-train_model(10, 500, .5, 32, 1e-7, 1)
-bot.sendImage(10, 500)
+train_model(10, 100, .5, 256, 1e-3, 1)
+bot.sendImage(10, 100)
 end = time.time()
 elapsed = end - start
 bot.sendElapsedTime(elapsed)
+
+bot.sendMessage('Trainning: train_model(11, 100, .5, 32, 1e-5, 1)')#model 2
+start = time.time()
+train_model(11, 100, .5, 32, 1e-5, 1)
+bot.sendImage(11, 100)
+end = time.time()
+elapsed = end - start
+bot.sendElapsedTime(elapsed)
+
+bot.sendMessage('Trainning: train_model(12, 100, .5, 32, 1e-3, 1)') #model 2
+start = time.time()
+train_model(12, 100, .5, 32, 1e-3, 1)
+bot.sendImage(12, 100)
+end = time.time()
+elapsed = end - start
+bot.sendElapsedTime(elapsed)
+
+
+bot.sendMessage('Trainning: train_model(13, 150, .5, 32, 1e-3, 1)') #model 1
+start = time.time()
+train_model(13, 150, .5, 32, 1e-3, 1)
+bot.sendImage(13, 150)
+end = time.time()
+elapsed = end - start
+bot.sendElapsedTime(elapsed)
+
 '''
+
+bot.sendMessage('Trainning: train_model(14, 500, .5, 32, 1e-3, 1)') #model 1
+start = time.time()
+train_model(14, 500, .5, 32, 1e-3, 1)
+bot.sendImage(14, 500)
+end = time.time()
+elapsed = end - start
+bot.sendElapsedTime(elapsed)
