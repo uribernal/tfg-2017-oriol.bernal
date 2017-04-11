@@ -1,9 +1,11 @@
-import numpy as np
-import h5py
-from featureExtraction import VideoGenerator as vg
 import math
-DATABASE_PATH = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/fineTuneFINAL.h5'
-DATABASE_PATH = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/final/labels_1frame.h5'
+
+import h5py
+import numpy as np
+
+from continuousMovies.featureExtraction import VideoGenerator as vg
+
+DATABASE_PATH = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/BaseDeDades.h5'
 
 def create_hdf5(dim: tuple):
     """ Creates an HDF5 file for storing the dataset
@@ -117,6 +119,7 @@ def save_labels_valence(movie: str):
     time = []
     mean = []
     std = []
+
     with open(path + movie + extension) as f:
         for line in f:
             l = line.split()
@@ -154,13 +157,14 @@ def get_movies_names():
         movies[i] = file[:-4]
     return(movies)
 
+
 '''
-#from helper import bot
+from helper import bot
 import time
-#bot.sendMessage("START")
+bot.sendMessage("START")
 start = time.time()
 
-create_hdf5((112,112))
+create_hdf5((224,224))
 movies = get_movies_names()
 for film in movies:
     store_film(
@@ -174,19 +178,16 @@ for film in movies:
     save_labels_arousal(film)
     save_labels_valence(film)
 
-#bot.sendMessage("Elapsed time:" + str(elapsed))
+bot.sendMessage("Elapsed time:" + str(elapsed))
 print(get_dimensions())
-
-'''
 
 '''
 movies = get_movies_names()
 for movie in movies:
     a = get_film(movie)
     b, c = get_labels(movie)
-    print(movie)
+
     print(a.shape)
     print(b.shape)
     print(c.shape)
     print('-------------')
-'''

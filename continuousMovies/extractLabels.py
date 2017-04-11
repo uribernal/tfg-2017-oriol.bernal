@@ -1,8 +1,7 @@
-import h5py
 import os
-import numpy as np
-from fine_tuning.albertoswork import video_extraxting_fps2 as db
-from featureExtraction import VideoGenerator as vg
+
+from continuousMovies.featureExtraction import VideoGenerator as vg
+from continuousMovies.fine_tuning.albertoswork import video_extraxting_fps2 as db
 
 raw_labels_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/' \
                   'LIRIS-ACCEDE-continuous-annotations/continuous-annotations/raw/'

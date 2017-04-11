@@ -1,10 +1,15 @@
+"""
+This assistant allows to compute different properties 
+from videos such as duration and frames.
+"""
+
 import numpy as np
 import cv2
-import imutils
+
 
 def video_to_array(video_path, resize=None, start_frame=0, end_frame=None,
                    length=None, dim_ordering='th'):
-    ''' Convert the video at the path given in to an array
+    """ Convert the video at the path given in to an array
     Args:
         video_path (string): path where the video is stored
         resize (Optional[tupple(int)]): desired size for the output video.
@@ -16,13 +21,14 @@ def video_to_array(video_path, resize=None, start_frame=0, end_frame=None,
         length (Optional[int]): Number of frames of length you want to read
             the video from the start_frame. This override the end_frame
             given before.
+        dim_ordering (Optional[str]): ...
     Returns:
         video (nparray): Array with all the data corresponding to the video
                          given. Order of dimensions are: channels, length
                          (temporal), height, width.
     Raises:
         Exception: If the video could not be opened
-    '''
+    """
 
     if cv2.__version__ >= '3.0.0':
         CAP_PROP_FRAME_COUNT = cv2.CAP_PROP_FRAME_COUNT
@@ -72,7 +78,8 @@ def video_to_array(video_path, resize=None, start_frame=0, end_frame=None,
 
 
 def get_num_frames(video_path):
-    ''' Return the number of frames of the video track of the video given '''
+    """ Return the number of frames of the video track of the video given """
+
     if cv2.__version__ >= '3.0.0':
         CAP_PROP_FRAME_COUNT = cv2.CAP_PROP_FRAME_COUNT
 
@@ -86,8 +93,10 @@ def get_num_frames(video_path):
     num_frames = int(cap.get(CAP_PROP_FRAME_COUNT))
     return num_frames
 
+
 def get_duration(video_path):
-    ''' Return the duration of the video track of the video given '''
+    """ Return the duration of the video track of the video given """
+
     if cv2.__version__ >= '3.0.0':
         CAP_PROP_FRAME_COUNT = cv2.CAP_PROP_FRAME_COUNT
         CAP_PROP_FPS = cv2.CAP_PROP_FPS
@@ -109,28 +118,20 @@ def get_duration(video_path):
 
 
 def reproduce_video(video_path):
-    ''' Reproduces the video in RGB '''
+    """ Reproduces the video in RGB """
+
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         cap.open(video_path)
 
     while True:
         ret, frame = cap.read()
-        if ret == True:
-            cv2.imshow('frame',frame)
+        if ret:
+            cv2.imshow('frame', frame)
             if cv2.waitKey(30) & 0xFF == ord('q'):
                 break
-
         else:
             break
 
     cap.release()
     cv2.destroyAllWindows()
-
-
-video_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/LIRIS-ACCEDE-continuous-movies/continuous-movies/After_The_Rain.mp4'# Capture video from file
-print(get_duration(video_path))
-print(get_num_frames(video_path))
-#reproduce_video(video_path)
-a = video_to_array(video_path)
-#print(a)
