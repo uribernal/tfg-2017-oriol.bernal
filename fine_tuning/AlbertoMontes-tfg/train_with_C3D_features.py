@@ -4,7 +4,6 @@ features extracted in each clip (16frames) with the pretrained
 C3D model from Alberto's work
 """
 
-import os
 import numpy as np
 from helper import DatasetManager as Db
 from helper import ModelGenerator as Mg
@@ -94,29 +93,21 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time
     # Training
     train_loss = []
     validation_loss = []
-    #for i in range(1, epochs + 1):
-        #print('Epoch {0}/{1}'.format(i, epochs))
 
     history = model.fit(x_train,
-                            y_train,
-                            batch_size=batch_size,  # Number of samples per gradient update.
-                            validation_data=(x_validation, y_validation),
-                            verbose=2,
-                            epochs=epochs,
-                            callbacks=[checkpointer, reduce_lr, early_stop],
-                            shuffle=False)
+                        y_train,
+                        batch_size=batch_size,  # Number of samples per gradient update.
+                        validation_data=(x_validation, y_validation),
+                        verbose=2,
+                        epochs=epochs,
+                        callbacks=[checkpointer, reduce_lr, early_stop],
+                        shuffle=False)
 
     train_loss.extend(history.history['loss'])
     validation_loss.extend(history.history['val_loss'])
 
     print('Reseting model states')
     model.reset_states()
-    #if (i % 5) == 0:
-        #print('Saving snapshot...')
-        #save_name = store_weights_file.format(experiment_id=experiment_id, epoch=i)
-        #save_path = os.path.join(store_weights_root, save_name)
-        #model.save_weights(save_path)
-
     save_plots(epochs, train_loss, validation_loss, experiment_id)
 
 
@@ -137,24 +128,28 @@ train_model(12, 100, .5, 32, 1e-3, 1)
 train_model(13, 150, .5, 32, 1e-3, 1)
 train_model(14, 500, .5, 32, 1e-3, 1)
 train_model(16, 100, .5, 32, 1e-3, 1)
+train_model(20, 200, .5, 1, 1e-4, 1)
+
 """
 
-from helper import TelegramBot as bot
-import time
-experiment_id = 19
-iterations = 200
-drop_out = .5
-batch_size = 32
-lr = 1e-4
-time_steps = 1
-path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/'
-file = 'FINAL_lstm_emotion_classification_{experiment_id}_e{epoch:03}.png'
-image_path = path + file.format(experiment_id=experiment_id, epoch=iterations)
+if __name__ == "__main__":
 
-bot.send_message('Trainning: train_model({0}, {1}, {2}, {3}, {4}, {5}'')'
-                 .format(experiment_id, iterations, drop_out, batch_size, lr, time_steps))  # model 1
-start = time.time()
-train_model(experiment_id, iterations, drop_out, batch_size, lr, time_steps)
-end = time.time()
-bot.send_image(image_path)
-bot.send_elapsed_time(end - start)
+    from helper import TelegramBot as Bot
+    import time
+    experiment_id = 20
+    iterations = 200
+    drop_out = .5
+    batch_size = 1
+    lr = 1e-4
+    time_steps = 1
+    path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/'
+    file = 'FINAL_lstm_emotion_classification_{experiment_id}_e{epoch:03}.png'
+    image_path = path + file.format(experiment_id=experiment_id, epoch=iterations)
+
+    Bot.send_message('Trainning: train_model({0}, {1}, {2}, {3}, {4}, {5}'')'
+                     .format(experiment_id, iterations, drop_out, batch_size, lr, time_steps))  # model 1
+    start = time.time()
+    train_model(experiment_id, iterations, drop_out, batch_size, lr, time_steps)
+    end = time.time()
+    Bot.send_image(image_path)
+    Bot.send_elapsed_time(end - start)
