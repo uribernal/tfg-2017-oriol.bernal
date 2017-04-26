@@ -1,12 +1,7 @@
-"""
-This script trains an LSTM to predict emotion in videos with 201 
-features extracted in each clip (16frames) with the pretrained
-model from Alberto's work
-"""
-
+import numpy as np
 from helper import DatasetManager as Db
 from helper import ModelGenerator as Mg
-import numpy as np
+from helper import AudioHelper as Ah
 from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
@@ -15,7 +10,6 @@ from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 def save_plots(iteration, train_loss, validation_loss, experiment_id):
 
     path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/'
-    file = 'FINAL_lstm_emotion_classification_{experiment_id}_e{epoch:03}.png'
 
     # Show plots
     x = np.arange(len(validation_loss))
@@ -31,44 +25,40 @@ def save_plots(iteration, train_loss, validation_loss, experiment_id):
     plt.close()
 
 
-def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
-
+def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time_steps):
     # Path for the C3D features
-    c3d_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/final/' \
-               'temporal_localitzation_output_myData_resized.h5'
-    store_weights_root = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/model_snapshots/'
-    store_weights_file = 'FINAL_lstm_emotion_classification_{experiment_id}_e{epoch:03}.hdf5'
+    c3d_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/final/C3D_features_myData_resized.h5'
+
+    # Path for the weights
+    store_weights_file = 'Only_Audio_e_{experiment_id}_e{epoch:03}.hdf5'
 
     # Get list with the names of the movies
     movies = Db.get_movies_names()
+
     # Get data & labels
     data, labels = Db.get_data_and_labels(movies, c3d_path)
 
+    audios = Db.get_fft_audios()
+    print('Audios shape: {}'.format(audios.shape))
     print('Data shape: {}'.format(data.shape))
     print('Labels shape: {}'.format(labels.shape))
-
-    data = data[:26368]
-    labels = labels[:26368]
-    print('Data shape: {}'.format(data.shape))
-    print('Labels shape: {}'.format(labels.shape))
-
-    data = data.reshape(int(data.shape[0]), 1, data.shape[1])
-    labels = labels.reshape(labels.shape[0], 1, 1)
 
     # Get the LSTM model
-    model = Mg.lstm_alberto_tfg_activities(batch_size, dropout_probability, True)
+    model = Mg.lstm_audio(batch_size, dropout_probability, True)
+
 
     # Split data into train and validation
-    part = 72 * 256  # 70 %
-    x_train = data[0:part, :]
+    part = int(0.72*audios.shape[0])
+    x_train = audios[0:part, :]
     y_train = labels[0:part]
-    x_validation = data[part:, :]
+    x_validation = audios[part:, :]
     y_validation = labels[part:]
     print('Train Input shape: {}'.format(x_train.shape))
     print('Train Output shape: {}\n'.format(y_train.shape))
     print('Validation Input shape: {}'.format(x_validation.shape))
     print('Validation Output shape: {}'.format(y_validation.shape))
 
+   
     # Compiling Model
     print('Compiling model')
     optimizer = Adam(lr=lr)
@@ -78,12 +68,14 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
 
     # Callbacks
     stop_patience = 20
-    model_checkpoint = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/checkpoints/' + \
+    model_checkpoint = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/checkpoints/' +\
                        store_weights_file.format(experiment_id=experiment_id, epoch=epochs)
 
     checkpointer = ModelCheckpoint(filepath=model_checkpoint,
                                    verbose=1,
-                                   save_best_only=True)
+                                   save_best_only=True,
+                                   period=5)
+
     reduce_lr = ReduceLROnPlateau(monitor='val_loss',
                                   factor=0.1,
                                   patience=5,
@@ -95,6 +87,7 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
     # Training
     train_loss = []
     validation_loss = []
+
     history = model.fit(x_train,
                         y_train,
                         batch_size=batch_size,  # Number of samples per gradient update.
@@ -111,43 +104,25 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
     model.reset_states()
     save_plots(epochs, train_loss, validation_loss, experiment_id)
 
-'''
-train_model(100,100,.5,256,1e-5)
-train_model(101,500,.5,256,1e-5)
-train_model(102,150,.5,32,1e-3)
-train_model(103,100,.5,128,1e-5)
-train_model(104,100,.5,64,1e-5)
-train_model(105,100,.5,32,1e-5)
-train_model(106,100,.5,256,1e-4)
-train_model(107,100,.5,256,1e-5)
-train_model(108,100,.5,256,1e-6)
-train_model(109,500,.5,64,1e-4)
-train_model(110,500,.5,32,1e-3)
-train_model(111,100,.5,32,1e-3)#paciencia early stoping de 20
-train_model(112,200,.5,32,1e-3)
-train_model(114, 200, .5, 1, 1e-4)
-train_model(115, 200, .5, 1, 1e-2)#stateful =false
-
-
-'''
-
 if __name__ == "__main__":
-    import time
-    from helper import TelegramBot as Bot
-    experiment_id = 115
-    iterations = 200
-    drop_out = .5
-    batch_size = 1
-    lr = 1e-2
 
-    path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/'
-    file = 'FINAL_lstm_emotion_classification_{experiment_id}_e{epoch:03}.png'
+    from helper import TelegramBot as Bot
+    import time
+    experiment_id = 200
+    iterations = 500
+    drop_out = .5
+    batch_size = 512
+    lr = 1e-3
+    time_steps = 1
+    path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/audio/'
+    file = 'audio_classification_{experiment_id}_e{epoch:03}.png'
     image_path = path + file.format(experiment_id=experiment_id, epoch=iterations)
 
-    Bot.send_message('Trainning: train_model({0}, {1}, {2}, {3}, {4}'')'
-                     .format(experiment_id, iterations, drop_out, batch_size, lr))
+    Bot.send_message('Trainning: train_model({0}, {1}, {2}, {3}, {4}, {5}'')'
+                     .format(experiment_id, iterations, drop_out, batch_size, lr, time_steps))  # model 1
     start = time.time()
-    train_model(experiment_id, iterations, drop_out, batch_size, lr)
+    train_model(experiment_id, iterations, drop_out, batch_size, lr, time_steps)
     end = time.time()
     Bot.send_image(image_path)
     Bot.send_elapsed_time(end - start)
+

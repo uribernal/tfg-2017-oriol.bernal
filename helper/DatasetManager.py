@@ -4,6 +4,7 @@ This assistant ...
 
 import h5py
 import numpy as np
+from helper import AudioHelper as Ah
 
 
 def vector_transform(vector1, l2):
@@ -161,3 +162,113 @@ def get_movies_names():
     for i, file in enumerate(movies):
         movies[i] = file[:-4]
     return movies
+
+
+def save_audio(movies):
+    from helper import AudioHelper as Ah
+    # Create the HDF5 file
+    hdf = h5py.File(
+        '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/audio/audio_data.h5', 'w')
+    hdf.close()
+
+    for movie in movies:
+        print('reading ' + movie)
+        data = Ah.get_audio(movie)
+
+        with h5py.File(
+                '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/audio/audio_data.h5',
+                'r+') as hdf:
+            # Store data
+            hdf.create_dataset('features/'+movie, data=data, compression='gzip', compression_opts=9)
+        print(movie + 'Stored:')
+
+
+def get_audio(film_name: str):
+    database_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/audio/audio_data.h5'
+
+    with h5py.File(database_path, 'r') as hdf:
+        # Read movie
+        mov = hdf.get('features/'+film_name)
+        audio = np.array(mov)
+        return audio
+
+
+def save_audios_resized(movies: list):
+
+    audios = np.array([])
+    for i, movie in enumerate(movies):
+        a = get_audio(movie)
+        fs = Ah.get_sampling_frequancy(movie)
+        len = a.shape[0]
+        duration = len / fs
+
+        print('------------------------->{}'.format(i))
+        print('Movie: {}'.format(movie))
+        print('Duration: {}'.format(duration))
+        print('Fs: {}'.format(fs))
+
+        len = a.shape[0]
+        q = len % 44100
+        a = a[0:len-q,:]
+        print('Audio shape: {}'.format(a.shape))
+
+        valence, arousal = get_labels(movie)
+        labels = valence.shape[0] - 1
+
+        print('Labels: {}'.format(labels))
+
+        len = a.shape[0]
+        cte = int(len/fs)
+
+        k = a.reshape(2, fs, cte)
+        print('K shape: {}'.format(k.shape))
+
+        audios = np.append(audios, a)
+        print('Audios shape: {}'.format(audios.shape))
+
+    print('Audios shape: {}\n'.format(audios.shape))
+    cte = int(audios.shape[0] / (2 * 44100))
+    audios = audios.reshape(2, 44100, cte)
+    print('Audios shape: {}\n'.format(audios.shape))
+
+    # Create the HDF5 file
+    hdf = h5py.File(
+        '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/audio/audio_data_resized.h5', 'w')
+    # Create the structure of the DB
+    hdf.close()
+    with h5py.File(
+            '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/audio/audio_data_resized.h5',
+            'r+') as hdf:
+        # Store data
+        hdf.create_dataset('features', data=audios, compression='gzip', compression_opts=9)
+    print('DATA Stored:')
+
+
+def get_audios_resized():
+    database_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/audio/audio_data_resized.h5'
+
+    with h5py.File(database_path, 'r') as hdf:
+        # Read movie
+        mov = hdf.get('features')
+        audios = np.array(mov)
+        return audios
+
+
+def get_fft_audio(movie: str):
+    database_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/audio/audio_data_fft.h5'
+
+    with h5py.File(database_path, 'r') as hdf:
+        # Read movie
+        mov = hdf.get('features/'+movie)
+        audio = np.array(mov)
+        return audio
+
+
+def get_fft_audios():
+    database_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/audio/audio_data_fft_all.h5'
+
+    with h5py.File(database_path, 'r') as hdf:
+        # Read movie
+        mov = hdf.get('features')
+        audio = np.array(mov)
+        return audio

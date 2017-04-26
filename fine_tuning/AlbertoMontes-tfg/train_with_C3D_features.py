@@ -27,6 +27,11 @@ def save_plots(iteration, train_loss, validation_loss, experiment_id):
     plt.plot(x, validation_loss, label='validation')
     plt.legend(loc='upper right')
 
+    # MIN
+    val, idx = min((val, idx) for (idx, val) in enumerate(validation_loss))
+    plt.annotate(str(val), xy=(idx, val), xytext=(idx, val-0.01),
+                arrowprops=dict(facecolor='black', shrink=0.0005))
+
     plt.savefig(path+file.format(experiment_id=experiment_id, epoch=iteration), dpi=fig.dpi)
     plt.close()
 
@@ -43,8 +48,10 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time
     # Get data & labels
     data, labels = Db.get_data_and_labels(movies, c3d_path)
 
-    data = data[:26368]
-    labels = labels[:26368]
+    res = data.shape[0] % batch_size
+    new_len = data.shape[0] - res
+    data = data[:new_len]
+    labels = labels[:new_len]
 
     data = data.reshape(int(data.shape[0]/time_steps), time_steps, data.shape[1])
     labels = labels.reshape(labels.shape[0], 1, 1)
@@ -53,10 +60,14 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time
     print('Labels shape: {}'.format(labels.shape))
 
     # Get the LSTM model
-    model = Mg.lstm_alberto_tfg_c3d(batch_size, time_steps, dropout_probability, True)
+    #model = Mg.lstm_alberto_tfg_c3d(batch_size, time_steps, dropout_probability, True)
+    #model = Mg.three_layers_lstm(2048, 1024, 512, batch_size, time_steps, dropout_probability, True)
+    model = Mg.two_layers_lstm(2048, 512, batch_size, time_steps, dropout_probability, True)
 
     # Split data into train and validation
-    part = 72*256  # 70 %
+    num = int(0.7*new_len/batch_size)
+    print(num)
+    part = num*batch_size  # 70 %
     x_train = data[0:part, :]
     y_train = labels[0:part]
     x_validation = data[part:, :]
@@ -129,6 +140,8 @@ train_model(13, 150, .5, 32, 1e-3, 1)
 train_model(14, 500, .5, 32, 1e-3, 1)
 train_model(16, 100, .5, 32, 1e-3, 1)
 train_model(20, 200, .5, 1, 1e-4, 1)
+train_model(21, 200, .5, 1, 1e-2, 1)#stateful = false
+
 
 """
 
@@ -136,11 +149,11 @@ if __name__ == "__main__":
 
     from helper import TelegramBot as Bot
     import time
-    experiment_id = 20
-    iterations = 200
+    experiment_id = 48
+    iterations = 500
     drop_out = .5
-    batch_size = 1
-    lr = 1e-4
+    batch_size = 2048
+    lr = 1e-3
     time_steps = 1
     path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/'
     file = 'FINAL_lstm_emotion_classification_{experiment_id}_e{epoch:03}.png'
