@@ -60,13 +60,12 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time
     print('Labels shape: {}'.format(labels.shape))
 
     # Get the LSTM model
-    #model = Mg.lstm_alberto_tfg_c3d(batch_size, time_steps, dropout_probability, True)
+    model = Mg.lstm_alberto_tfg_c3d(batch_size, time_steps, dropout_probability, True)
     #model = Mg.three_layers_lstm(2048, 1024, 512, batch_size, time_steps, dropout_probability, True)
-    model = Mg.two_layers_lstm(2048, 512, batch_size, time_steps, dropout_probability, True)
+    #model = Mg.two_layers_lstm(2048, 512, batch_size, time_steps, dropout_probability, True)
 
     # Split data into train and validation
-    num = int(0.7*new_len/batch_size)
-    print(num)
+    num = int(0.7 * new_len / batch_size)
     part = num*batch_size  # 70 %
     x_train = data[0:part, :]
     y_train = labels[0:part]
@@ -85,18 +84,19 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time
     print('Model Compiled!')
 
     # Callbacks
-    stop_patience = 20
+    stop_patience = 100
     model_checkpoint = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/checkpoints/' +\
                        store_weights_file.format(experiment_id=experiment_id, epoch=epochs)
 
     checkpointer = ModelCheckpoint(filepath=model_checkpoint,
                                    verbose=1,
                                    save_best_only=True)
+                                   #period=5)
 
     reduce_lr = ReduceLROnPlateau(monitor='val_loss',
                                   factor=0.1,
-                                  patience=5,
-                                  min_lr=0,
+                                  patience=5,######
+                                  min_lr=1e-10000,
                                   verbose=1)
 
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=stop_patience)
@@ -149,20 +149,20 @@ if __name__ == "__main__":
 
     from helper import TelegramBot as Bot
     import time
-    experiment_id = 48
-    iterations = 500
+    experiment_id = 52
+    iterations = 5000
     drop_out = .5
-    batch_size = 2048
+    batch_size = 256
     lr = 1e-3
     time_steps = 1
+    description = 'Experiment {0}: Using callbacks, drop-out={1}, batch-size={2}. starting-lr={3}, model=only-visual'.format(experiment_id, drop_out, batch_size, lr)
     path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/'
     file = 'FINAL_lstm_emotion_classification_{experiment_id}_e{epoch:03}.png'
     image_path = path + file.format(experiment_id=experiment_id, epoch=iterations)
 
-    Bot.send_message('Trainning: train_model({0}, {1}, {2}, {3}, {4}, {5}'')'
-                     .format(experiment_id, iterations, drop_out, batch_size, lr, time_steps))  # model 1
+    #Bot.send_message(description)
     start = time.time()
     train_model(experiment_id, iterations, drop_out, batch_size, lr, time_steps)
     end = time.time()
-    Bot.send_image(image_path)
-    Bot.send_elapsed_time(end - start)
+    #Bot.send_image(image_path)
+    #Bot.send_elapsed_time(end - start)

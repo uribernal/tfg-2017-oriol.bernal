@@ -117,6 +117,25 @@ def get_duration(video_path):
     return duration
 
 
+def get_fps(video_path):
+    """ Return the fps of the video given """
+
+    if cv2.__version__ >= '3.0.0':
+        CAP_PROP_FPS = cv2.CAP_PROP_FPS
+
+    else:
+        CAP_PROP_FPS = cv2.cv.CV_CAP_PROP_FPS
+
+    cap = cv2.VideoCapture(video_path)
+
+    if not cap.isOpened():
+        raise Exception('Could not open the video')
+    fps = float(cap.get(CAP_PROP_FPS))
+    # When everything done, release the capture
+    cap.release()
+    return fps
+
+
 def reproduce_video(video_path):
     """ Reproduces the video in RGB """
 

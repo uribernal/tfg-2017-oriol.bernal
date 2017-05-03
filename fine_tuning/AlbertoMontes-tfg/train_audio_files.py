@@ -21,11 +21,17 @@ def save_plots(iteration, train_loss, validation_loss, experiment_id):
     plt.plot(x, validation_loss, label='validation')
     plt.legend(loc='upper right')
 
-    plt.savefig(path+file.format(experiment_id=experiment_id, epoch=iteration), dpi=fig.dpi)
+    # MIN
+    val, idx = min((val, idx) for (idx, val) in enumerate(validation_loss))
+    plt.annotate(str(val), xy=(idx, val), xytext=(idx, val - 0.01),
+                 arrowprops=dict(facecolor='black', shrink=0.0005))
+
+    plt.savefig(path + file.format(experiment_id=experiment_id, epoch=iteration), dpi=fig.dpi)
+    plt.close()
     plt.close()
 
 
-def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time_steps):
+def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
     # Path for the C3D features
     c3d_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/final/C3D_features_myData_resized.h5'
 
@@ -37,6 +43,7 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time
 
     # Get data & labels
     data, labels = Db.get_data_and_labels(movies, c3d_path)
+    labels = labels.reshape(labels.shape[0], 1, 1)
 
     audios = Db.get_fft_audios()
     print('Audios shape: {}'.format(audios.shape))
@@ -44,19 +51,28 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time
     print('Labels shape: {}'.format(labels.shape))
 
     # Get the LSTM model
-    model = Mg.lstm_audio(batch_size, dropout_probability, True)
+    model = Mg.c3d_audio(batch_size, True)
 
-
+    # Make data fit into batches
+    res = audios.shape[0] % batch_size
+    new_len = audios.shape[0] - res
+    audios = audios[:new_len]
+    labels = labels[:new_len]
+    print('Audios shape: {}'.format(audios.shape))
+    print('Labels shape: {}\n'.format(labels.shape))
+    #audios = audios.reshape(new_len, 1, 98*64)
+    audios = audios.reshape(new_len, 1, 1, 98, 64)
     # Split data into train and validation
-    part = int(0.72*audios.shape[0])
-    x_train = audios[0:part, :]
+    num = int(0.7 * new_len / batch_size)
+    part = num * batch_size  # 70 %
+    x_train = audios[0:part, :, :]
     y_train = labels[0:part]
-    x_validation = audios[part:, :]
+    x_validation = audios[part:, :, :]
     y_validation = labels[part:]
     print('Train Input shape: {}'.format(x_train.shape))
     print('Train Output shape: {}\n'.format(y_train.shape))
     print('Validation Input shape: {}'.format(x_validation.shape))
-    print('Validation Output shape: {}'.format(y_validation.shape))
+    print('Validation Output shape: {}\n'.format(y_validation.shape))
 
    
     # Compiling Model
@@ -67,18 +83,17 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time
     print('Model Compiled!')
 
     # Callbacks
-    stop_patience = 20
+    stop_patience = 80
     model_checkpoint = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/checkpoints/' +\
                        store_weights_file.format(experiment_id=experiment_id, epoch=epochs)
 
     checkpointer = ModelCheckpoint(filepath=model_checkpoint,
                                    verbose=1,
-                                   save_best_only=True,
-                                   period=5)
+                                   save_best_only=True)
 
     reduce_lr = ReduceLROnPlateau(monitor='val_loss',
                                   factor=0.1,
-                                  patience=5,
+                                  patience=10,
                                   min_lr=0,
                                   verbose=1)
 
@@ -108,21 +123,21 @@ if __name__ == "__main__":
 
     from helper import TelegramBot as Bot
     import time
-    experiment_id = 200
-    iterations = 500
+    experiment_id = 5
+    iterations = 5000
     drop_out = .5
-    batch_size = 512
+    batch_size = 512*2
     lr = 1e-3
-    time_steps = 1
-    path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/audio/'
+    path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/'
     file = 'audio_classification_{experiment_id}_e{epoch:03}.png'
     image_path = path + file.format(experiment_id=experiment_id, epoch=iterations)
 
-    Bot.send_message('Trainning: train_model({0}, {1}, {2}, {3}, {4}, {5}'')'
-                     .format(experiment_id, iterations, drop_out, batch_size, lr, time_steps))  # model 1
+    description = 'Experiment {0}: Using callbacks, drop-out={1}, batch-size={2}. starting-lr={3}, model=only-acoustic'.format(experiment_id, drop_out, batch_size, lr)
+
+    #Bot.send_message(description)
     start = time.time()
-    train_model(experiment_id, iterations, drop_out, batch_size, lr, time_steps)
+    train_model(experiment_id, iterations, drop_out, batch_size, lr)
     end = time.time()
-    Bot.send_image(image_path)
-    Bot.send_elapsed_time(end - start)
+    #Bot.send_image(image_path)
+    #Bot.send_elapsed_time(end - start)
 
