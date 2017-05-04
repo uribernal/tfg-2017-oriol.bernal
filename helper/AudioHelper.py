@@ -25,9 +25,11 @@ def extract_audios():
         extract_audio_from_video(video_path, audio_path, movie)
 
 
-def get_audio(movie: str):
-    audios_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/audios/'
-    fs, data = wavfile.read(audios_path + movie + '.wav')
+def get_audio(movie_path: str):
+    #  audios_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/audios/'
+    #  fs, data = wavfile.read(audios_path + movie + '.wav')
+    fs, data = wavfile.read(movie_path)
+
     return data
 
 
