@@ -47,6 +47,18 @@ def get_movie_labels(path: str, movie: str):
     return lab
 
 
+def get_ground_truth_data(videos: list, show_info: str=False):
+    lab = np.array([])
+    for video in videos:
+        l = get_movie_labels(annotations_path, video)  # The ground truth data for each film
+        lab = np.append(lab, l)
+        if show_info:
+            print('{0}: ({1}, {2})'.format(video, len(labels), len(labels[0])))
+    if show_info:
+        print('')
+    return lab.reshape(3, lab.shape[0]//3)
+
+
 def get_videos_info(videos: list, ext: str):
     from helper import VideoHelper as Vh
     rgb_frames = []
@@ -117,19 +129,15 @@ def get_acoustic_data(videos: list):
         print('{0}: {1}'.format(video, audio_array.shape))
         nb_samples = num_audio_samples[cont]
         nb_frames = nb_samples // win_frames
-        #audio_array = audio_array.transpose(1, 0)
+        # audio_array = audio_array.transpose(1, 0)
         audio_array = audio_array[:nb_frames * win_frames, :]
         audio_array = audio_array.reshape((nb_frames, win_frames, 2))
-        audio_array = audio_array.transpose(2, 0, 1)
+        # audio_array = audio_array.transpose(2, 0, 1)
         print('resized {0}: {1}'.format(video, audio_array.shape))
         data = np.append(data, audio_array)
-        if cont == 0:
-            print(np.sum(np.sum(np.sum(audio_array))))
-            print(audio_array)
-            print('\n')
-        if cont == 2:
-            break
-    return data.reshape(2, int(data.shape[0] / (2 * win_frames)), win_frames)
+
+    data = data.reshape(int(data.shape[0] / (2 * win_frames)), win_frames, 2)
+    return data.transpose(2, 0, 1)
 
 # PATHS
 annotations_path = '/home/uribernal/Desktop/MediaEval2017/annotations/'
@@ -147,7 +155,7 @@ audios_extension = '.wav'
 
 # PRE-WORK
 # Extract audios
-
+# Change fps in videos
 
 # CONSTANTS
 time_prediction_constant = 10
@@ -171,10 +179,8 @@ print('types of labels ({0}): {1}\n'.format(len(labels_type), labels_type))
 
 # Calculate
 print('\033[94m' + 'GROUND TRUTH INFORMATION:' + '\033[0m')
-for movie in movies:
-    labels = get_movie_labels(annotations_path, movie)  # The ground truth data for each film
-    print('{0}: ({1}, {2})'.format(movie, len(labels), len(labels[0])))
-
+labels = get_ground_truth_data(movies)  # The ground truth data for each film
+print('labels: ({0}, {1})\n'.format(labels.shape[0], labels.shape[1]))
 
 print('\033[94m' + 'VISUAL INFORMATION:' + '\033[0m')
 frames, fps, duration, num_clips = get_videos_info(movies, videos_extension)
@@ -196,20 +202,17 @@ for i, _ in enumerate(fps):
 print('predictions_length ({0}): {1}\n'.format(len(predictions_length), predictions_length))
 
 print('\033[94m' + 'RGB DATA:' + '\033[0m')
-visual_data = get_visual_data(movies)  # Matrix with the RGB info from videos
-print('visual_data ({0})'.format(visual_data.shape))
-
+visual_data = get_visual_data(movies[:0])  # Matrix with the RGB info from videos
+print('visual_data ({0})\n'.format(visual_data.shape))
 
 print('\033[94m' + 'AUDIO DATA:' + '\033[0m')
 acoustic_data = get_acoustic_data(movies)  # Matrix with the audio samples from videos  # dim = (num_films, 2, audio_length)
-print('acoustic_data ({0})'.format(acoustic_data.shape))
-print(np.sum(np.sum(np.sum(acoustic_data[:, :324, :]))))
-print(acoustic_data[:, :324, :])
+print('acoustic_data {0}'.format(acoustic_data.shape))
+
+# PROCESSING
+# process audio
 
 '''
-visual_data = np.array([])  # Matrix with the RGB info from videos  # dim = (num_films, 3, frames, video_height, video_width)
-acoustic_data = np.array([])  # Matrix with the audio samples from videos  # dim = (num_films, 2, audio_length)
-
 visual_features = np.array([])  # Matrix with the features from videos  # dim = (num_films, num_clips, num_frames, num_visual_feat)
 acoustic_features = np.array([])  # Matrix with the audio features from videos  # dim = (num_films, num_audio_frames, num_stft, num_filter_banks)
 '''
