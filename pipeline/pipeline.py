@@ -43,7 +43,7 @@ def get_movie_labels(path: str, movie: str):
         else:
             raise Exception('Error extracting labels')
 
-    lab = np.array((mean_arousal, mean_valence, fear), dtype=float)
+    lab = np.array((mean_valence, mean_arousal, fear), dtype=float)
     return lab
 
 
@@ -51,12 +51,13 @@ def get_ground_truth_data(videos: list, show_info: str=False):
     lab = np.array([])
     for video in videos:
         l = get_movie_labels(annotations_path, video)  # The ground truth data for each film
-        lab = np.append(lab, l)
+        e = l.transpose(1, 0)
+        lab = np.append(lab, e)
         if show_info:
-            print('{0}: ({1}, {2})'.format(video, len(labels), len(labels[0])))
+            print('{0}: {1}'.format(video, l.shape))
     if show_info:
         print('')
-    return lab.reshape(3, lab.shape[0]//3)
+    return lab.reshape(lab.shape[0]//3, 3)
 
 
 def get_videos_info(videos: list, ext: str):
@@ -137,7 +138,8 @@ def get_acoustic_data(videos: list):
         data = np.append(data, audio_array)
 
     data = data.reshape(int(data.shape[0] / (2 * win_frames)), win_frames, 2)
-    return data.transpose(2, 0, 1)
+    return data.transpose(0, 2, 1)
+
 
 # PATHS
 annotations_path = '/home/uribernal/Desktop/MediaEval2017/annotations/'
@@ -206,7 +208,7 @@ visual_data = get_visual_data(movies[:0])  # Matrix with the RGB info from video
 print('visual_data ({0})\n'.format(visual_data.shape))
 
 print('\033[94m' + 'AUDIO DATA:' + '\033[0m')
-acoustic_data = get_acoustic_data(movies)  # Matrix with the audio samples from videos  # dim = (num_films, 2, audio_length)
+acoustic_data = get_acoustic_data(movies[:0])  # Matrix with the audio samples from videos  # dim = (num_films, 2, audio_length)
 print('acoustic_data {0}'.format(acoustic_data.shape))
 
 # PROCESSING
