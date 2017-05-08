@@ -51,7 +51,7 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
     print('Labels shape: {}'.format(labels.shape))
 
     # Get the LSTM model
-    model = Mg.c3d_audio(batch_size, True)
+    model = Mg.lstm_raw_audio(batch_size, True)
 
     # Make data fit into batches
     res = audios.shape[0] % batch_size
@@ -61,7 +61,7 @@ def train_model(experiment_id, epochs, dropout_probability, batch_size, lr):
     print('Audios shape: {}'.format(audios.shape))
     print('Labels shape: {}\n'.format(labels.shape))
     #audios = audios.reshape(new_len, 1, 98*64)
-    audios = audios.reshape(new_len, 1, 1, 98, 64)
+    audios = audios.reshape(new_len, 1, 98 * 64)
     # Split data into train and validation
     num = int(0.7 * new_len / batch_size)
     part = num * batch_size  # 70 %

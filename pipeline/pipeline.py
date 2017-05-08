@@ -1,5 +1,5 @@
 import numpy as np
-
+import h5py
 
 def get_movies_names(path: str):
     from os import listdir
@@ -204,11 +204,11 @@ for i, _ in enumerate(fps):
 print('predictions_length ({0}): {1}\n'.format(len(predictions_length), predictions_length))
 
 print('\033[94m' + 'RGB DATA:' + '\033[0m')
-visual_data = get_visual_data(movies[:0])  # Matrix with the RGB info from videos
+visual_data = get_visual_data(movies[:])  # Matrix with the RGB info from videos
 print('visual_data ({0})\n'.format(visual_data.shape))
 
 print('\033[94m' + 'AUDIO DATA:' + '\033[0m')
-acoustic_data = get_acoustic_data(movies[:0])  # Matrix with the audio samples from videos  # dim = (num_films, 2, audio_length)
+acoustic_data = get_acoustic_data(movies[:])  # Matrix with the audio samples from videos  # dim = (num_films, 2, audio_length)
 print('acoustic_data {0}'.format(acoustic_data.shape))
 
 # PROCESSING
@@ -218,3 +218,35 @@ print('acoustic_data {0}'.format(acoustic_data.shape))
 visual_features = np.array([])  # Matrix with the features from videos  # dim = (num_films, num_clips, num_frames, num_visual_feat)
 acoustic_features = np.array([])  # Matrix with the audio features from videos  # dim = (num_films, num_audio_frames, num_stft, num_filter_banks)
 '''
+
+# STORE DATA
+
+file = '/home/uribernal/Desktop/MediaEval2017/data/emotional_impact.h5'
+store = True
+if store:
+    # Create the HDF5 file
+    hdf = h5py.File(file, 'w')
+    # Store data
+    with h5py.File(file,'r+') as hdf:
+        # Store data
+        #hdf.create_dataset('movies', data=movies, dtype='<U23', compression='gzip', compression_opts=9)
+        #hdf.create_dataset('labels_type', data=labels_type, compression='gzip', compression_opts=9)
+        hdf.create_dataset('labels', data=labels, compression='gzip', compression_opts=9)
+        hdf.create_dataset('frames', data=frames, compression='gzip', compression_opts=9)
+        hdf.create_dataset('fps', data=fps, compression='gzip', compression_opts=9)
+        hdf.create_dataset('duration', data=duration, compression='gzip', compression_opts=9)
+        hdf.create_dataset('fs', data=fs, compression='gzip', compression_opts=9)
+        hdf.create_dataset('num_audio_samples', data=num_audio_samples, compression='gzip', compression_opts=9)
+        hdf.create_dataset('predictions_length', data=predictions_length, compression='gzip', compression_opts=9)
+
+        hdf.create_dataset('visual_data', data=visual_data, compression='gzip', compression_opts=9)
+        hdf.create_dataset('acoustic_data', data=acoustic_data, compression='gzip', compression_opts=9)
+    print('DATA Stored:')
+
+
+# GET DATA
+with h5py.File(file, 'r') as hdf:
+    # Read movie
+    mov = hdf.get('num_audio_samples')
+    audio = np.array(mov)
+print(len(audio))
