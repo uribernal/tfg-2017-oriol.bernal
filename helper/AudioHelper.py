@@ -33,7 +33,7 @@ def get_audio(movie_path: str):
     return data
 
 
-def get_sampling_frequancy(movie: str):
+def get_sampling_frequency(movie: str):
     audios_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/audios/'
     fs = wavfile.read(audios_path + movie + '.wav')
     return fs[0]

@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
     from helper import TelegramBot as Bot
     import time
-    experiment_id = 53
+    experiment_id = 54
     iterations = 5000
     drop_out = .5
     batch_size = 256

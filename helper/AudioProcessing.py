@@ -8,7 +8,7 @@ import h5py
 
 def get_audio_resized(movie: str):
     a = Db.get_audio(movie)
-    fs = Ah.get_sampling_frequancy(movie)
+    fs = Ah.get_sampling_frequency(movie)
     len = a.shape[0]
     q = len % 44100
     a = a[0:len - q, :]
@@ -48,7 +48,7 @@ for i, movie in enumerate(movies):
 
     print('------------------------->{}'.format(i))
     fs, data = wavfile.read(audios_path + movie + '.wav')
-    data = a = get_audio_resized(movie)
+    data = get_audio_resized(movie)
 
     len = data.shape[1]*data.shape[2]
     duration = len / fs
