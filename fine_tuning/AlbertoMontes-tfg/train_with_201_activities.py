@@ -4,12 +4,12 @@ features extracted in each clip (16frames) with the pretrained
 model from Alberto's work
 """
 
+import matplotlib.pyplot as plt
+import numpy as np
 from helper import DatasetManager as Db
 from helper import ModelGenerator as Mg
-import numpy as np
-from keras.optimizers import Adam
-import matplotlib.pyplot as plt
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+from keras.optimizers import Adam
 
 
 def save_plots(iteration, train_loss, validation_loss, experiment_id):

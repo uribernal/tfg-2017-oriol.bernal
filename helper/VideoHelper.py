@@ -3,8 +3,8 @@ This assistant allows to compute different properties
 from videos such as duration and frames.
 """
 
-import numpy as np
 import cv2
+import numpy as np
 
 
 def video_to_array(video_path, resize=None, start_frame=0, end_frame=None,
@@ -154,3 +154,62 @@ def reproduce_video(video_path):
 
     cap.release()
     cv2.destroyAllWindows()
+
+
+def read_video(input_video: str, resize: tuple=(112, 112)):
+    vid = video_to_array(input_video, resize=resize)
+
+    return vid
+
+
+def get_visual_data(videos: list, input_size, num_frames, print_info=False):
+    from helper import DatasetManager as Dm
+    data = np.array([])
+    for cont, video in enumerate(videos):
+        input_video = Dm.get_video_path(video)
+        video_array = read_video(input_video, input_size)
+        if print_info:
+            print('{0} shape: {1}'.format(video, video_array.shape))
+        nb_frames = get_num_frames(input_video)
+        nb_clips = nb_frames // num_frames
+        video_array = video_array.transpose(1, 0, 2, 3)
+        video_array = video_array[:nb_clips * num_frames, :, :, :]
+        video_array = video_array.reshape((nb_clips, num_frames, 3, 112, 112))
+        video_array = video_array.transpose(0, 2, 1, 3, 4)
+        if print_info:
+            print('resized {0}: {1}\n'.format(video, video_array.shape))
+        data = np.append(data, video_array)
+
+    return data.reshape(int(data.shape[0]/(3*16*112*112)), 3, 16, 112, 112)
+
+
+def get_resized_video(index_video, video_path, input_size, print_info=False):
+    from helper import DatasetManager as Dm
+    movies = Dm.get_movies_names()
+    predictions_length = Dm.get_predictions_length(movies)
+    fps = get_fps(video_path)
+    video_array = read_video(video_path, input_size)
+    if print_info:
+     print('{0} shape: {1}'.format(movies[index_video], video_array.shape))
+    lab = predictions_length[index_video]
+    resized_number_of_frames = lab * 5 * int(np.round(fps))
+    video_array = video_array[:, :resized_number_of_frames, :, :]
+    video_array = video_array.transpose(1, 0, 2, 3)
+    video_array = video_array.reshape((lab, int(video_array.shape[0]/lab), 3, input_size[0], input_size[1]))
+    if print_info:
+        print('resized {0}: {1}'.format(movies[index_video], video_array.shape))
+    return video_array
+
+
+def get_visual(videos: list, print_info=False):
+    from helper.DatasetManager import videos_path, videos_extension
+    visual = np.array([])
+    for cont, video in enumerate(videos):
+        input_video = videos_path + video + videos_extension
+
+        resized_video = get_resized_video(cont, input_video, (98, 64), print_info=print_info)
+        resized_video = resized_video[:, :120, :, :, :]
+        visual = np.append(visual, resized_video)
+    return visual.reshape(int(visual.shape[0]/(120*3*98*64)), 120, 3, 98, 64)
+
+

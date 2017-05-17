@@ -1,27 +1,5 @@
-# -*- coding: utf-8 -*-
-'''VGG19 model for Keras.
-# Reference:
-- [Very Deep Convolutional Networks for Large-Scale Image Recognition](https://arxiv.org/abs/1409.1556)
-'''
-from __future__ import print_function
-
-import numpy as np
-import warnings
-
-from keras.models import Model
-from keras.layers import Flatten, Dense, Input
-from keras.layers import Conv2D
-from keras.layers import MaxPooling2D
-from keras.layers import GlobalMaxPooling2D
-from keras.layers import GlobalAveragePooling2D
-from keras.preprocessing import image
-from keras.utils import layer_utils
-from keras.utils.data_utils import get_file
-from keras import backend as K
-from keras.applications.imagenet_utils import decode_predictions
-from keras.applications.imagenet_utils import preprocess_input
 from keras.applications.imagenet_utils import _obtain_input_shape
-from keras.engine.topology import get_source_inputs
+from keras.applications.vgg19 import *
 
 
 WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg19_weights_tf_dim_ordering_tf_kernels.h5'
@@ -31,17 +9,20 @@ WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases
 def VGG19(include_top=True, weights='imagenet',
           input_tensor=None, input_shape=None,
           pooling=None,
-          classes=1000):
+          classes=3087):
     """Instantiates the VGG19 architecture.
+
     Optionally loads weights pre-trained
     on ImageNet. Note that when using TensorFlow,
     for best performance you should set
     `image_data_format="channels_last"` in your Keras config
     at ~/.keras/keras.json.
+
     The model and the weights are compatible with both
     TensorFlow and Theano. The data format
     convention used by the model is the one
     specified in your Keras config file.
+
     # Arguments
         include_top: whether to include the 3 fully-connected
             layers at the top of the network.
@@ -70,8 +51,10 @@ def VGG19(include_top=True, weights='imagenet',
         classes: optional number of classes to classify images
             into, only to be specified if `include_top` is True, and
             if no `weights` argument is specified.
+
     # Returns
         A Keras model instance.
+
     # Raises
         ValueError: in case of invalid argument for `weights`,
             or invalid input shape.
@@ -134,7 +117,7 @@ def VGG19(include_top=True, weights='imagenet',
         x = Flatten(name='flatten')(x)
         x = Dense(4096, activation='relu', name='fc1')(x)
         x = Dense(4096, activation='relu', name='fc2')(x)
-        x = Dense(classes, activation='softmax', name='predictions')(x)
+        x = Dense(classes, activation='sigmoid', name='predictions')(x)
     else:
         if pooling == 'avg':
             x = GlobalAveragePooling2D()(x)
@@ -182,16 +165,22 @@ def VGG19(include_top=True, weights='imagenet',
                               'at ~/.keras/keras.json.')
     return model
 
+def get_features_from_vgg19(videos, win_frames=44100):
+    # from keras.applications.vgg19 import VGG19
+    from fine_tuning.Audio.vgg19 import VGG19
+    from keras.layers import Input
+    from helper import AudioHelper as Ah
 
-if __name__ == '__main__':
-    model = VGG19(include_top=True, weights='imagenet')
+    acoustic_data = Ah.get_acoustic_data(videos, win_frames=win_frames, print_info=False)
 
-    img_path = 'cat.jpg'
-    img = image.load_img(img_path, target_size=(224, 224))
-    x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
-    x = preprocess_input(x)
-    print('Input image shape:', x.shape)
+    acoustic_data = acoustic_data.transpose(0, 2, 3, 1)
+    acoustic_data = acoustic_data[:, :, :, :3]
 
-    preds = model.predict(x)
-    print('Predicted:', decode_predictions(preds))
+    # this could also be the output a different Keras model or layer
+    input_tensor = Input(shape=(98, 64, 3))  # this assumes K.image_data_format() == 'channels_last'
+
+    model = VGG19(input_tensor=input_tensor, weights='imagenet', include_top=False, input_shape=(98, 64, 3))
+
+    # for i in range(acoustic_data.shape[0]):
+    predictions = model.predict(acoustic_data[:, :, :, :], batch_size=1)
+    return predictions
