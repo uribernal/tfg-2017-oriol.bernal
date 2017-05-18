@@ -185,6 +185,7 @@ def get_visual_data(videos: list, input_size, num_frames, print_info=False):
 
 def get_resized_video(index_video, video_path, input_size, print_info=False):
     from helper import DatasetManager as Dm
+
     movies = Dm.get_movies_names()
     predictions_length = Dm.get_predictions_length(movies)
     fps = get_fps(video_path)

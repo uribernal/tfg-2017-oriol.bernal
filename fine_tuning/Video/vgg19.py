@@ -187,7 +187,7 @@ def get_features_from_vgg19(videos, win_frames=44100):
 
 
 def get_features_from_vgg19_videos(videos):
-    from fine_tuning.Video.vgg19 import VGG19
+    from fine_tuning.Audio.vgg19 import VGG19
     #from keras.applications.vgg19 import VGG19
     from keras.layers import Input
     from helper import AudioHelper as Ah
@@ -201,22 +201,21 @@ def get_features_from_vgg19_videos(videos):
     num_pred = 0
     for cont, movie in enumerate(videos):
         input_video = videos_path + movie + videos_extension
-        resized_video = Vh.get_resized_video(cont, input_video, (112, 112), print_info=True)
+        resized_video = Vh.get_resized_video(cont, input_video, (224, 224), print_info=True)
         resized_video = resized_video[:, :120, :, :, :]
         visual = np.append(visual, resized_video)
-        visual = visual.reshape(int(visual.shape[0] / (120 * 3 * 112 * 112)), 120, 3, 112, 112)
+        visual = visual.reshape(int(visual.shape[0] / (120 * 3 * 224 * 224)), 120, 3, 224, 224)
         visual = visual.transpose(0, 1, 3, 4, 2)
         num_pred += visual.shape[0]
 
         for i in range(visual.shape[0]):
             # this could also be the output a different Keras model or layer
-            input_tensor = Input(shape=(112, 112, 3))  # this assumes K.image_data_format() == 'channels_last'
+            input_tensor = Input(shape=(224, 224, 3))  # this assumes K.image_data_format() == 'channels_last'
 
-            model = VGG19(input_tensor=input_tensor, weights='imagenet', include_top=False, input_shape=(98, 64, 3))
+            model = VGG19(input_tensor=input_tensor, weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 
             # for i in range(acoustic_data.shape[0]):
-            p
-            pred = np.append(pred, )
+            pred = np.append(pred, model.predict(visual[i, :, :, :], batch_size=120))
             print(pred.shape)
     print(pred.shape)
     predictions = pred.reshape(num_pred, int(pred.shape[0]/num_pred))

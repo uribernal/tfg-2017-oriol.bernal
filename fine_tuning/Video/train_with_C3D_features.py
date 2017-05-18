@@ -6,7 +6,7 @@ C3D model from Alberto's work
 
 import matplotlib.pyplot as plt
 import numpy as np
-from helper import DatasetManager as Db
+from old.helper import DatasetManager as Db
 from helper import ModelGenerator as Mg
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from keras.optimizers import Adam
