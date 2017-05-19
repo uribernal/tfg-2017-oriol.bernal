@@ -5,6 +5,8 @@ to mobile phones.
 """
 
 import telegram
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def send_message(message: str):
@@ -30,3 +32,25 @@ def send_elapsed_time(elapsed: int):
     elif elapsed/60 >= 1:
         minutes = int(elapsed / 60)
     send_message('Elapsed Time: {0:02d}h{1:02d}min'.format(hours, minutes))
+
+
+def save_plots(train_loss, validation_loss, path):
+
+    # Show plots
+    x = np.arange(len(validation_loss))
+    fig = plt.figure(1)
+    fig.suptitle('LOSS', fontsize=14, fontweight='bold')
+
+    # LOSS: TRAINING vs VALIDATION
+    plt.plot(x, train_loss, '--', linewidth=2, label='train')
+    plt.plot(x, validation_loss, label='validation')
+    plt.legend(loc='upper right')
+
+    # MIN
+    val, idx = min((val, idx) for (idx, val) in enumerate(validation_loss))
+    plt.annotate(str(val), xy=(idx, val), xytext=(idx, val - 0.01),
+                 arrowprops=dict(facecolor='black', shrink=0.0005))
+
+    plt.savefig(path, dpi=fig.dpi)
+    plt.close()
+    plt.close()
