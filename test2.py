@@ -7,7 +7,7 @@ from train.train_raw_audio import train_model as T3
 
 drop_out = .5
 
-for experiment_id in range(1, 30):
+for experiment_id in range(30, 60):
     batch_size = 32 * experiment_id
     figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/mixed_features/' + \
                    '{min:05}_Mixed_Features_e_{experiment_id}_b{batch_size:03}_d{drop_out:02}.png'
@@ -28,7 +28,7 @@ for experiment_id in range(1, 30):
     Bot.send_elapsed_time(end - start)
 Bot.send_message('Finished')
 
-for experiment_id in range(1, 30):
+for experiment_id in range(30, 60):
     batch_size = 32 * experiment_id
     figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/audio_features/' + \
                    '{min:05}_Audio_Features_e_{experiment_id}_b{batch_size:03}_d{drop_out:02}.png'
@@ -48,7 +48,7 @@ for experiment_id in range(1, 30):
     Bot.send_elapsed_time(end - start)
 Bot.send_message('Finished')
 
-for experiment_id in range(1, 30):
+for experiment_id in range(30, 60):
     batch_size = 32 * experiment_id
     figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/raw_audio/' + \
                    '{min:05}_Raw_Audio_e_{experiment_id}_b{batch_size:03}_d{drop_out:02}.png'

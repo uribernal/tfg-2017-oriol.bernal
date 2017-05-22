@@ -109,6 +109,23 @@ def lstm_raw_audio(batch_size=32, dropout_probability=.5, summary=False):
     return model
 
 
+def lstm_raw_video(batch_size=32, dropout_probability=.5, summary=False):
+
+    input_features = Input(batch_shape=(batch_size, 120, 3*98*64), name='features')
+    input_normalized = BatchNormalization(name='normalization')(input_features)
+    input_dropout = Dropout(dropout_probability)(input_normalized)
+    lstm = LSTM(512, return_sequences=True, stateful=False, name='lsmt')(input_dropout)
+    output_dropout = Dropout(dropout_probability)(lstm)
+    output = TimeDistributed(Dense(2, activation='tanh'), name='fc')(output_dropout)
+
+    model = Model(inputs=input_features, outputs=output)
+
+    if summary:
+        model.summary()
+    return model
+
+
+
 def lstm_audio_features(batch_size=32, time_steps=1, dropout_probability=.5, summary=False):
 
     input_features = Input(batch_shape=(batch_size, time_steps, 3*2*512,), name='features')
