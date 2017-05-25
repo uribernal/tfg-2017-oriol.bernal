@@ -31,7 +31,7 @@ def lstm_alberto_tfg_c3d_val_ar(batch_size=32, time_steps=1, dropout_probability
     output_dropout = Dropout(dropout_probability)(lstm)
     output = TimeDistributed(Dense(2, activation='tanh'), name='fc')(output_dropout)
 
-    model = Model(inputs=input_features, outputs=output)
+    model = Model(input=input_features, output=output)
 
     if summary:
         model.summary()
@@ -102,7 +102,7 @@ def lstm_raw_audio(batch_size=32, dropout_probability=.5, summary=False):
     output_dropout = Dropout(dropout_probability)(lstm)
     output = TimeDistributed(Dense(2, activation='tanh'), name='fc')(output_dropout)
 
-    model = Model(inputs=input_features, outputs=output)
+    model = Model(input=input_features, output=output)
 
     if summary:
         model.summary()
@@ -135,7 +135,7 @@ def lstm_audio_features(batch_size=32, time_steps=1, dropout_probability=.5, sum
     output_dropout = Dropout(dropout_probability)(lstm)
     output = TimeDistributed(Dense(2, activation='tanh'), name='fc')(output_dropout)
 
-    model = Model(inputs=input_features, outputs=output)
+    model = Model(input=input_features, output=output)
 
     if summary:
         model.summary()

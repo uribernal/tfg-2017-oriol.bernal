@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from fine_tuning.Audio import vgg19 as vgg19
-from helper import DatasetManager as Dm
-from helper import ModelGenerator as Mg
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from keras.optimizers import Adam
+
+from helper import DatasetManager as Dm
+from helper import ModelGenerator as Mg
 
 
 def save_plots(iteration, train_loss, validation_loss, experiment_id):
@@ -162,7 +162,6 @@ if __name__ == "__main__":
         Bot.send_image(image_path)
         Bot.send_elapsed_time(end - start)
     Bot.send_message('FINISHED')
-    from scripts import save_visual_data
     Bot.send_message('FINISHED')
 
     '''

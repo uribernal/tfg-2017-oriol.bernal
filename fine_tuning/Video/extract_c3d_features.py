@@ -2,6 +2,7 @@ from helper import DatasetManager as Dm
 from helper import ModelGenerator as Mg
 from helper import VideoHelper as Vh
 import numpy as np
+import h5py
 
 
 def C3D_conv_features(length, input_size, summary=False):
@@ -71,27 +72,31 @@ def C3D_conv_features(length, input_size, summary=False):
     model.add(Dense(487, activation='softmax', name='fc8'))
 
     # Load weights
-    model.load_weights('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/fine_tuning/Video/c3d-sports1M_weights.h5')
+    model.load_weights(
+        '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/fine_tuning/Video/c3d-sports1M_weights.h5')
 
     for _ in range(4):
-        #model.pop_layer()
+        # model.pop_layer()
         model.pop()
 
     if summary:
         print(model.summary())
     return model
 
+
 movies = Dm.get_movies_names()
 input_size = (112, 112)
 length = 16
-movies = movies[22:]
+movies = [movies[22], 'jj']
 for movie in movies:
+    with h5py.File('/home/uribernal/Desktop/MediaEval2017/data/visual_data.h5', 'r') as hdf:
+        labels = np.array(hdf.get('labels/' + movie))
+    lab = labels.shape[0]
+    lab2 = int(lab / 3)
+    print('{0}: {1}'.format(movie, lab2))
     input_video = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/' \
-                  'LIRIS-ACCEDE-continuous-movies/continuous-movies/'+movie+'.mp4'
-    print('Reading Video...')
-    video_array = Vh.video_to_array(input_video, resize=input_size)
-    if video_array is None:
-        raise Exception('The video could not be read')
+                  'LIRIS-ACCEDE-continuous-movies/continuous-movies/' + movie + '.mp4'
+
     nb_frames = Vh.get_num_frames(input_video)
     duration = Vh.get_duration(input_video)
     fps = nb_frames / duration
@@ -99,6 +104,15 @@ for movie in movies:
     print('FPS: {:.1f}'.format(fps))
     print('Number of frames: {}'.format(nb_frames))
 
+    print('Reading Video...')
+    fff = [int(nb_frames / 3), int(2 * nb_frames / 3), None]
+    fff2 = [0, int(nb_frames / 3) + 1, int(2 * nb_frames / 3) + 1]
+    i = 2
+    nb_frames = nb_frames - fff2[i]
+    video_array = Vh.video_to_array(input_video, resize=input_size, start_frame=fff2[i], end_frame=fff[i])
+
+    if video_array is None:
+        raise Exception('The video could not be read')
     nb_clips = nb_frames // length
     video_array = video_array.transpose(1, 0, 2, 3)
     video_array = video_array[:nb_clips * length, :, :, :]
@@ -107,7 +121,7 @@ for movie in movies:
 
     # Load C3D model and mean
     print('Loading C3D network...')
-    model = C3D_conv_features(length, input_size, True)
+    model = C3D_conv_features(length, input_size, False)
     model.compile(optimizer='sgd', loss='mse')
     mean_total = np.load('/home/uribernal/Downloads/activitynet-2016-cvprw-master/data/models/c3d-sports1M_mean.npy')
     mean = np.mean(mean_total, axis=(0, 2, 3, 4), keepdims=True)
@@ -116,12 +130,20 @@ for movie in movies:
     print('Extracting features...')
     X = video_array - mean
     Y = model.predict(X, batch_size=1, verbose=1)
-    path_file = '/home/uribernal/Desktop/MediaEval2017/data/data/video_features.h5'
+    #######################################
+    res = Y.shape[0] % lab2
+    len = Y.shape[0] - res
+    Y = Y[:len, :]
+    k = int(np.floor(5 * fps / 16))
+    Y1 = Y.reshape(int(Y.shape[0] / k), k, Y.shape[1])
+    Y2 = np.sum(Y1, axis=1) / 9
+
+    path_file = '/home/uribernal/Desktop/MediaEval2017/data/data/video_features3.h5'
     import os
-    import h5py
+
     if not os.path.isfile(path_file):
         # Create the HDF5 file
         hdf = h5py.File(path_file, 'w')
         hdf.close()
     with h5py.File(path_file, 'r+') as hdf:
-        hdf.create_dataset('dev/'+movie, data=Y, compression='gzip', compression_opts=9)
+        hdf.create_dataset('dev/' + movie + str(i), data=Y, compression='gzip', compression_opts=9)

@@ -85,7 +85,7 @@ def train_model(model, experiment_id, dropout_probability, batch_size):
                         batch_size=batch_size,  # Number of samples per gradient update.
                         validation_data=(x_validation, y_validation),
                         verbose=2,
-                        epochs=10000,
+                        nb_epoch=10000,
                         callbacks=[checkpointer, reduce_lr, early_stop],
                         shuffle=False)
 
