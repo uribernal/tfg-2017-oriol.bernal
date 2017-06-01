@@ -3,9 +3,8 @@ This assistant allows to compute different properties
 from audio such as duration and to extract the audio files from video.
 """
 import subprocess
-
+from helper import DatasetManager as Dm
 import numpy as np
-from helper import DatasetManager as Db
 from scipy.io import wavfile
 
 
@@ -72,7 +71,6 @@ def get_resized_audio(index_video: int, win_frames: int, print_info=False):
 
 
 def get_resized_audio2(index_video: int, win_frames, print_info=False):
-    from helper import DatasetManager as Dm
     movies = Dm.get_movies_names()
     audio_path = Dm.get_audio_path(movies[index_video])
     sampl_freq, audio_array = wavfile.read(audio_path)
@@ -80,7 +78,6 @@ def get_resized_audio2(index_video: int, win_frames, print_info=False):
     if print_info:
         print('{0} shape: {1}'.format(movies[index_video], audio_array.shape))
     nb_frames = nb_samples // win_frames
-
     audio_array = audio_array[:nb_frames * win_frames, :]
     if print_info:
         print('{0} shape: {1}'.format(movies[index_video], audio_array.shape))
@@ -102,15 +99,13 @@ def get_resized_audios(videos: list, win_frames, print_info=False):
 
 def compute_STFT_and_MelBank(data, print_info=False):
     pre_emphasis = 0.97
-    frame_size = 0.025  # time windowing
-    frame_stride = 0.01  # time overlapping
+    frame_size = 8.0/735  # time windowing
+    frame_stride = 4.0/735  # time overlapping
     sample_rate = 44100  # fs
     nfilt = 64  # number of filters
     NFFT = 512  # points for the STFT
 
-    cte = 0
     input = np.array([])
-    input1 = np.array([])
 
     # Pre-emphasis
     for j in range(data.shape[1]):
@@ -172,8 +167,8 @@ def compute_STFT_and_MelBank(data, print_info=False):
             print('filter_banks: {}'.format(filter_banks.shape))
 
         input = np.append(input, filter_banks)
-    # cte += j + 1
-    input = input.reshape(int(input.shape[0] / (98 * 64)), 98, 64)
+        print_info=False
+    input = input.reshape(int(input.shape[0] / (96 * 64)), 96, 64)
     if print_info:
         print('Input: {}'.format(input.shape))
 
@@ -181,7 +176,7 @@ def compute_STFT_and_MelBank(data, print_info=False):
 
 
 def get_acoustic_data(videos: list, win_frames, print_info=False):
-    from helper import DatasetManager as Dm
+
     movies = Dm.get_movies_names()
     predictions_length = Dm.get_predictions_length(movies)
 
@@ -191,10 +186,10 @@ def get_acoustic_data(videos: list, win_frames, print_info=False):
         computed_audio = compute_STFT_and_MelBank(resized_audio, print_info=False)
         cte = predictions_length[cont] * 5
         computed_audio = computed_audio[:cte, :, :]
-        computed_audio = computed_audio.reshape(int(computed_audio.shape[0] / 5), 5, 98, 64)
+        computed_audio = computed_audio.reshape(int(computed_audio.shape[0] / 5), 5, 96, 64)
         resized_audios = np.append(resized_audios, computed_audio)
 
-    resized_audios = resized_audios.reshape(int(resized_audios.shape[0]/(98*64*5)), 5, 98, 64)
+    resized_audios = resized_audios.reshape(int(resized_audios.shape[0]/(96*64*5)), 5, 96, 64)
     if print_info:
         print('resized: {0}\n'.format(resized_audios.shape))
 

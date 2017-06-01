@@ -1,16 +1,76 @@
+import h5py
+import os.path
+import numpy as np
+from fine_tuning.Audio import vgg19
+from helper import DatasetManager as Dm
+from fine_tuning.Audio.vgg19 import VGG19
+from keras.layers import Input
+from helper import AudioHelper as Ah
+from fine_tuning.Audio import vgg19
 
 
-def generate_arrays_from_file(path):
-    while 1:
-        f = open(path)
-        for line in f:
-            # create numpy arrays of input data
-            # and labels, from each line in the file
-            x, y = process_line(line)
-            img = load_images(x)
-            yield (img, y)
-        f.close()
+def modify_vector(labels):
+    cte1 = np.ones(10)
+    cte2 = np.ones(9)
+    cte3 = np.ones(8)
+    new_array = cte1 * labels[0]
+    for i in range(labels.shape[0] - 1):
+        if (i % 2 == 0):
+            cte = cte1
+        elif (i % 5 == 0):
+            cte = cte3
+        else:
+            cte = cte2
+        a = (cte * labels[i] + cte * labels[i + 1]) / 2.0
+        new_array = np.append(new_array, a)
+    a = cte1 * labels[-1]
+    new_array = np.append(new_array, a)
+    return new_array
 
-model.fit_generator(generate_arrays_from_file('/my_file.txt'),
 
-samples_per_epoch=10000, nb_epoch=10)
+def modify_vector2(labels):
+    a1 = np.ones(9)
+    a2 = np.ones(10)
+    new_array = a1 * labels[0]
+
+    sequence = [a1, a2, a1, a1, a2, a1, a2, a1]
+    j = 0
+    for i in range(labels.shape[0] - 1):
+        if j == 8:
+            j = 0
+        cte = sequence[j]
+        a = (cte * labels[i] + cte * labels[i + 1]) / 2.0
+        new_array = np.append(new_array, a)
+    a = a2 * labels[-1]
+    new_array = np.append(new_array, a)
+    return new_array
+
+movies = Dm.get_movies_names()
+path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/emotional_impact.h5'
+for movie in movies:
+    movie = 'Decay'
+    with h5py.File(path, 'r') as hdf:
+        labels = np.array(hdf.get('dev/ground_truth_data/' + movie))
+
+    print(labels.shape)
+
+    new_array = modify_vector2(labels[:, 0])
+    print(new_array.shape)
+    #new_array2 = modify_vector(labels[:, 1])
+
+    #new_array3 = modify_vector(labels[:, 2])
+
+    #caca = np.append(new_array, new_array2)
+    #caca = caca.reshape(2, new_array.shape[0])
+
+    #caca = np.append(caca, new_array3)
+    #caca = caca.reshape(3, new_array.shape[0])
+    #caca = caca.transpose(1, 0)
+
+    #print(caca.shape)
+    break
+    #print(np.sum(caca[:]))
+
+    with h5py.File(path, 'r+') as hdf:
+        hdf.create_dataset('dev/modified_labels/' + movie, data=caca, compression='gzip', compression_opts=9)
+    print('{} stored'.format(movie))

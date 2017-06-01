@@ -170,16 +170,16 @@ def get_features_from_vgg19(videos, win_frames=44100):
     from fine_tuning.Audio.vgg19 import VGG19
     from keras.layers import Input
     from helper import AudioHelper as Ah
+    # this could also be the output a different Keras model or layer
+    input_tensor = Input(shape=(98, 64, 3))  # this assumes K.image_data_format() == 'channels_last'
 
+    model = VGG19(input_tensor=input_tensor, weights='imagenet', include_top=False, input_shape=None)
+    print('hi')
     acoustic_data = Ah.get_acoustic_data(videos, win_frames=win_frames, print_info=False)
 
     acoustic_data = acoustic_data.transpose(0, 2, 3, 1)
     acoustic_data = acoustic_data[:, :, :, :3]
 
-    # this could also be the output a different Keras model or layer
-    input_tensor = Input(shape=(98, 64, 3))  # this assumes K.image_data_format() == 'channels_last'
-
-    model = VGG19(input_tensor=input_tensor, weights='imagenet', include_top=False, input_shape=(98, 64, 3))
 
     # for i in range(acoustic_data.shape[0]):
     predictions = model.predict(acoustic_data[:, :, :, :], batch_size=1)
@@ -220,3 +220,8 @@ def get_features_from_vgg19_videos(videos):
     print(pred.shape)
     predictions = pred.reshape(num_pred, int(pred.shape[0]/num_pred))
     return predictions
+
+from helper import DatasetManager as Dm
+movies = Dm.get_movies_names()
+a = get_features_from_vgg19(movies)
+print(a.shape)

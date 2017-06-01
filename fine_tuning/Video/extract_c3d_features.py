@@ -87,38 +87,14 @@ def C3D_conv_features(length, input_size, summary=False):
 movies = Dm.get_movies_names()
 input_size = (112, 112)
 length = 16
-movies = [movies[22], 'jj']
+del movies[22]
 for movie in movies:
-    with h5py.File('/home/uribernal/Desktop/MediaEval2017/data/visual_data.h5', 'r') as hdf:
-        labels = np.array(hdf.get('labels/' + movie))
+    with h5py.File('/home/uribernal/Desktop/MediaEval2017/data/data/data/emotional_impact.h5', 'r') as hdf:
+        labels = np.array(hdf.get('dev/ground_truth_data/' + movie))
+        video_array = np.array(hdf.get('dev/visual_data/' + movie))
+    print(video_array.shape)
     lab = labels.shape[0]
-    lab2 = int(lab / 3)
-    print('{0}: {1}'.format(movie, lab2))
-    input_video = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/' \
-                  'LIRIS-ACCEDE-continuous-movies/continuous-movies/' + movie + '.mp4'
-
-    nb_frames = Vh.get_num_frames(input_video)
-    duration = Vh.get_duration(input_video)
-    fps = nb_frames / duration
-    print('Duration: {:.1f}s'.format(duration))
-    print('FPS: {:.1f}'.format(fps))
-    print('Number of frames: {}'.format(nb_frames))
-
-    print('Reading Video...')
-    fff = [int(nb_frames / 3), int(2 * nb_frames / 3), None]
-    fff2 = [0, int(nb_frames / 3) + 1, int(2 * nb_frames / 3) + 1]
-    i = 2
-    nb_frames = nb_frames - fff2[i]
-    video_array = Vh.video_to_array(input_video, resize=input_size, start_frame=fff2[i], end_frame=fff[i])
-
-    if video_array is None:
-        raise Exception('The video could not be read')
-    nb_clips = nb_frames // length
-    video_array = video_array.transpose(1, 0, 2, 3)
-    video_array = video_array[:nb_clips * length, :, :, :]
-    video_array = video_array.reshape((nb_clips, length, 3, input_size[0], input_size[1]))
-    video_array = video_array.transpose(0, 2, 1, 3, 4)
-
+    fps = 30
     # Load C3D model and mean
     print('Loading C3D network...')
     model = C3D_conv_features(length, input_size, False)
@@ -129,21 +105,19 @@ for movie in movies:
     # Extract features
     print('Extracting features...')
     X = video_array - mean
-    Y = model.predict(X, batch_size=1, verbose=1)
+    Y = model.predict(X, batch_size=1, verbose=0)
     #######################################
-    res = Y.shape[0] % lab2
-    len = Y.shape[0] - res
-    Y = Y[:len, :]
-    k = int(np.floor(5 * fps / 16))
-    Y1 = Y.reshape(int(Y.shape[0] / k), k, Y.shape[1])
-    Y2 = np.sum(Y1, axis=1) / 9
+    #res = Y.shape[0] % lab
+    #len = Y.shape[0] - res
+    #Y = Y[:len, :]
+    #k = int(np.floor(5 * fps / 16))
+    #Y1 = Y.reshape(int(Y.shape[0] / k), k, Y.shape[1])
+    #Y2 = np.sum(Y1, axis=1) / 9
 
-    path_file = '/home/uribernal/Desktop/MediaEval2017/data/data/video_features3.h5'
-    import os
+    path_file = '/home/uribernal/Desktop/MediaEval2017/data/data/data/emotional_impact.h5'
 
-    if not os.path.isfile(path_file):
-        # Create the HDF5 file
-        hdf = h5py.File(path_file, 'w')
-        hdf.close()
     with h5py.File(path_file, 'r+') as hdf:
-        hdf.create_dataset('dev/' + movie + str(i), data=Y, compression='gzip', compression_opts=9)
+        hdf.create_dataset('dev/visual_features/' + movie, data=Y, compression='gzip', compression_opts=9)
+    print('{} stored'.format(movie))
+print('Finished')
+

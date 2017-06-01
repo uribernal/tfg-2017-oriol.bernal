@@ -2,9 +2,11 @@ import h5py
 import os.path
 from helper import AudioHelper as Ah
 from helper import DatasetManager as Dm
+import numpy as np
+
 
 path = '/home/uribernal/Desktop/MediaEval2017/data/data/'
-name = 'emotional_impact'
+name = 'acoustic_data_final'
 extension = '.h5'
 path_file = path + name + extension
 
@@ -16,19 +18,22 @@ if not os.path.isfile(path_file):
 movies = Dm.get_movies_names()
 labels_type = ['valence', 'arousal', 'fear']
 
-time_prediction_constant = 10
-time_shift_prediction_constant = 5
-input_size = (112, 112)
-num_frames = 16
-num_visual_feat = 4096  # Features after C3D convolutions (visual feature extractor model)
-num_acoustic_feat = 4096  # Features after CD convolutions (acoustic feature extractor model)
-win_frames = 44100
-num_stft = 98
+win_frames = 23520
+num_stft = 96
 num_filter_banks = 64
 
-acoustic_data = Ah.get_acoustic_data(movies, win_frames=win_frames, print_info=False)
-with h5py.File(path_file, 'r+') as hdf:
-    hdf.create_dataset('acoustic_data', data=acoustic_data, compression='gzip', compression_opts=9)
-print('Acoustic data length Stored:')
+movies = Dm.get_movies_names()
+predictions_length = Dm.get_predictions_length(movies)
 
+for cont, movie in enumerate(movies):
+    resized_audio = Ah.get_resized_audio2(cont, win_frames=win_frames, print_info=False)
+    computed_audio = Ah.compute_STFT_and_MelBank(resized_audio, print_info=False)
+    print(computed_audio.shape)
+    with h5py.File(path_file, 'r+') as hdf:
+        hdf.create_dataset('acoustic_data/'+movie, data=computed_audio, compression='gzip', compression_opts=9)
+    print('Acoustic data length Stored:')
 
+    #computed_audio = computed_audio.reshape(int(computed_audio.shape[0] / 5), 5, 98, 64)
+#with h5py.File(path_file, 'r+') as hdf:
+    #hdf.create_dataset('acoustic_data', data=acoustic_data, compression='gzip', compression_opts=9)
+#print('Acoustic data length Stored:')
