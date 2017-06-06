@@ -119,7 +119,7 @@ if __name__ == "__main__":
         Bot.send_message(description)
         start = time.time()
         min = train_model(model, experiment_id, drop_out, batch_size)
-        image_path =figures_path.format(min=min, experiment_id=experiment_id, batch_size=batch_size, drop_out=drop_out)
+        image_path = figures_path.format(min=min, experiment_id=experiment_id, batch_size=batch_size, drop_out=drop_out)
 
         end = time.time()
         Bot.send_image(image_path)
