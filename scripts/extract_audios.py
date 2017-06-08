@@ -7,8 +7,8 @@ using the function extract_audio
 from helper import AudioHelper as Ah
 
 
-def extract_audio(movie_path, audio_path, auido_name):
-    Ah.extract_audio_from_video(movie_path, audio_path, auido_name)
+def extract_audio(movie_path, audio_path):
+    Ah.extract_audio_from_video(movie_path, audio_path)
 
 
 if __name__ == '__main__':
