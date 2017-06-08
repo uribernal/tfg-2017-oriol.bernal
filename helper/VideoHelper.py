@@ -5,6 +5,35 @@ from videos such as duration and frames.
 
 import cv2
 import numpy as np
+import subprocess
+from helper import DatasetManager as Dm
+
+
+def video_2_30fps(video_input_path: str, video_output_path: str, video_shape: tuple =None):
+    if video_shape == None:
+        s=''
+    else:
+        s = '-s ' + str(video_shape[0]) + 'x' + str(video_shape[1])
+
+    command = 'ffmpeg -y -i ' + video_input_path + ' -r 30 ' + s + \
+              ' -c:v libx264 -b:v 3M -strict -2 -movflags faststart '+video_output_path
+    subprocess.call(command, shell=True)
+
+
+def videos_2_30fps(videos_path=None, resized_videos_path=None, videos_extension=None, video_shape=None):
+    if videos_path==None:
+        from helper.DatasetManager import videos_path
+    if resized_videos_path == None:
+        from helper.DatasetManager import resized_videos_path
+    if videos_extension == None:
+        from helper.DatasetManager import videos_extension
+
+    movies = Dm.get_movies_names()
+    for movie in movies:
+        input = videos_path + movie + videos_extension
+        output = resized_videos_path + movie + videos_extension
+
+        video_2_30fps(input, output, video_shape=video_shape)
 
 
 def video_to_array(video_path, resize=None, start_frame=0, end_frame=None,

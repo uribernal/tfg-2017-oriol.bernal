@@ -10,10 +10,15 @@ K.set_image_dim_ordering('th')
 annotations_path = '/home/uribernal/Desktop/MediaEval2017/annotations/'
 videos_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/' \
               'LIRIS-ACCEDE-continuous-movies/continuous-movies/'
+resized_videos_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/' \
+                      'LIRIS-ACCEDE-continuous-movies/30fps/'
+
 audios_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/' \
               'audios/'
+
 visual_features_path = ''
 acoustic_features_path = ''
+
 videos_extension = '.mp4'
 audios_extension = '.wav'
 

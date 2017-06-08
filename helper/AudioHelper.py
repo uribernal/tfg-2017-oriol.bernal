@@ -2,25 +2,34 @@
 This assistant allows to compute different properties 
 from audio such as duration and to extract the audio files from video.
 """
+
 import subprocess
 from helper import DatasetManager as Dm
 import numpy as np
 from scipy.io import wavfile
 
 
-def extract_audio_from_video(video_path: str, audio_path: str, audio_name: str):
+def extract_audio_from_video(video_path: str, audio_path: str):
     command = 'ffmpeg -i ' + video_path + ' -ab 2 -ar 44100 -vn ' \
-              + audio_path + '/' + audio_name + '.wav'
+              + audio_path
     subprocess.call(command, shell=True)
 
 
-def extract_audios():
-    from helper.DatasetManager import videos_path, audios_path, videos_extension
+def extract_audios(videos_path=None, audios_path=None, videos_extension=None, audios_extension=None):
+    if videos_path is None:
+        from helper.DatasetManager import videos_path
+    if audios_path is None:
+        from helper.DatasetManager import audios_path
+    if videos_extension is None:
+        from helper.DatasetManager import videos_extension
+    if audios_extension is None:
+        from helper.DatasetManager import audios_extension
 
-    movies = Db.get_movies_names()
+    movies = Dm.get_movies_names()
     for movie in movies:
-        video_path = videos_path + movie + videos_extension
-        extract_audio_from_video(video_path, audios_path, movie)
+        input = videos_path + movie + videos_extension
+        output = audios_path + movie + audios_extension
+        extract_audio_from_video(input, output)
 
 
 def get_audio(movie_path: str):
