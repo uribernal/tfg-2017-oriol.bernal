@@ -13,6 +13,8 @@ from keras.layers import LSTM, BatchNormalization, Dense, Dropout, Input, TimeDi
 from keras.models import Model
 import random
 import time
+import math
+from sklearn.metrics import mean_squared_error
 
 
 def model_valence_arousal(batch_size=1, time_step=1, dropout_probability=0.5, summary=False):
@@ -102,12 +104,14 @@ for movie in movies:
 labels = l.reshape(l.shape[0] // 3, 1, 3)
 features = f.reshape(f.shape[0] // 7168, 1, 7168)
 
-batch_sizes = [32, 64, 128, 256, 512, 1024]
+batch_sizes = [128, 256, 512, 1024, 32, 64, 2048]
+batch_sizes = [64]
 for experiment_id, batch_size in enumerate(batch_sizes):
+    experiment_id = experiment_id+1
     Bot.send_message('Start')
     time_step = 1
     dropout = 0.5
-    optimizer = Adam(lr=0.0001)
+    optimizer = Adam(lr=0.01)
 
     description = 'Experiment {0}: Audio_Features, Using callbacks, drop-out={1}, batch-size={2}.'.format(
         experiment_id, dropout, batch_size)
@@ -160,21 +164,22 @@ for experiment_id, batch_size in enumerate(batch_sizes):
         model, min_val = train_and_evaluate_model(model, x_train, y_train, x_validation, y_validation, batch_size)
 
         predicted = model.predict(x_test)
+        print(y_test.shape)
+        print(predicted.shape)
 
-        p_valence = np.sum(predicted[0])
-        valence = np.sum(y_test[:, :, 0])
+        # calculate root mean squared error
+        valenceScore = mean_squared_error(predicted[:, 0, 0], y_test[:, 0, 0])
+        print('Valence Score: %.2f RMSE' % (valenceScore))
+        testScore = mean_squared_error(predicted[:, 0, 1], y_test[:, 0, 1])
+        print('Arousal Score: %.2f RMSE' % (testScore))
 
-        p_arousal = np.sum(predicted[1])
-        arousal = np.sum(y_test[:, :, 1])
 
-        print('VALENCE Test prediction shape: {0}, sum = {1}'.format(predicted.shape, p_valence))
-        print('VALENCE Test labels shape: {0}, sum = {1}'.format(y_test.shape, valence))
+        print('VALENCE Test prediction shape: {0}, sum = {1}'.format(predicted.shape, valenceScore))
 
-        print('AROUSAL Test prediction shape: {0}, sum = {1}'.format(predicted.shape, p_arousal))
-        print('AROUSAL Test labels shape: {0}, sum = {1}'.format(y_test.shape, arousal))
+        print('AROUSAL Test prediction shape: {0}, sum = {1}'.format(predicted.shape, testScore))
 
-        mse_valence = np.append(mse_valence, (y_test[:, :, 0]-p_valence)**2)
-        mse_arousal = np.append(mse_arousal, (y_test[:, :, 1]-p_arousal)**2)
+        mse_valence = np.append(mse_valence, valenceScore)
+        mse_arousal = np.append(mse_arousal, testScore)
 
         Bot.send_message(description)
         figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/mixed_features/' + \
@@ -184,9 +189,15 @@ for experiment_id, batch_size in enumerate(batch_sizes):
         Bot.send_image(image_path)
         Bot.send_elapsed_time(end - start)
 
+
+
     print(mse_valence)
     print(mse_arousal)
     Bot.send_message('MSE valence: {}'.format(mse_valence))
     Bot.send_message('MSE arousal: {}'.format(mse_arousal))
 
     Bot.send_message('Finished')
+
+    for i in range(predicted.shape[0]):
+        print('{}   {}'.format(predicted[i,0,0], y_test[i,0,0]))
+        print('   {}'.format(predicted[i,0,0], y_test[i,0,0]))

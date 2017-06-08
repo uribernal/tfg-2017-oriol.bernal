@@ -78,31 +78,19 @@ def demodify_vector(labels):
     return new_array
 
 
-movies = Dm.get_movies_names()
-path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/emotional_impact.h5'
-for movie in movies:
-    #movie = 'Decay'
-    with h5py.File(path, 'r') as hdf:
-        labels = np.array(hdf.get('dev/ground_truth_data/' + movie))
+def calculate_PCC(y_pred, y_true):
+    m1 = np.mean(y_pred)
+    m2 = np.mean(y_true)
+    y_pred_norm = y_pred -m1
+    y_true_norm = y_true - m2
+    nom = np.sum(y_pred_norm*y_true_norm)
+    den = np.sqrt(np.sum(y_pred_norm**2))*np.sqrt(np.sum(y_true_norm**2))
 
-    print(labels.shape)
+    return nom/den
 
-    new_array = modify_vector2(labels[:, 0])
-    print(new_array.shape)
-    new_array2 = modify_vector2(labels[:, 1])
 
-    new_array3 = modify_vector2(labels[:, 2])
 
-    caca = np.append(new_array, new_array2)
-    caca = caca.reshape(2, new_array.shape[0])
+val = np.array([0.02702231, 0.17112755, 0.18911039, 0.17959486, 0.17049178, 0.17258332, 0.20127973, 0.1854717, 0.18314009, 0.17307961])
+ar = np.array([0.02418533, 0.16093774, 0.15094463, 0.15372311, 0.15803463, 0.15863948, 0.14824309, 0.16629058, 0.15309987, 0.15245098])
 
-    caca = np.append(caca, new_array3)
-    caca = caca.reshape(3, new_array.shape[0])
-    caca = caca.transpose(1, 0)
 
-    print(caca.shape)
-    #break
-
-    with h5py.File(path, 'r+') as hdf:
-        hdf.create_dataset('dev/modified_labels/' + movie, data=caca, compression='gzip', compression_opts=9)
-    print('{} stored'.format(movie))
