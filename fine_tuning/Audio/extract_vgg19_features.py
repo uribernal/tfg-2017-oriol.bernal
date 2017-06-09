@@ -34,7 +34,7 @@ def extract_features(audio_name, audio_path = None, audio_extension = None, feat
             from helper.DatasetManager import audios_extension as video_extension
 
         input = audio_path + audio_name + video_extension
-        resized_audio = Ah.get_resized_audio3(input, win_frames=win_frames, print_info=False)
+        resized_audio = Ah.get_resized_audio(input, win_frames=win_frames, print_info=False)
         acoustic_data = Ah.compute_STFT_and_MelBank(resized_audio, print_info=False)
 
 

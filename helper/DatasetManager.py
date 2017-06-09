@@ -137,21 +137,6 @@ def get_audios_info(videos: list):
     return sampling_freq, audio_samples
 
 
-def get_mixed_data(videos: list, win_frames, print_info=False):
-    from helper import VideoHelper as Vh
-    from helper import AudioHelper as Ah
-
-    res = np.array([])
-    visual = Vh.get_visual(videos, print_info=print_info)
-    if print_info:
-        print('\033[92m visual shape {0}\033[4m'.format(visual.shape))
-
-    acoustic = Ah.get_acoustic_data(videos, win_frames=win_frames, print_info=print_info)
-    if print_info:
-        print('\033[92m acoustic shape {0}\033[4m'.format(acoustic.shape))
-    #res = acoustic
-    return res
-
 def compute_pcc(y_pred, y_true):
     m1 = np.mean(y_pred)
     m2 = np.mean(y_true)

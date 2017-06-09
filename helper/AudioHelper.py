@@ -10,12 +10,18 @@ from scipy.io import wavfile
 
 
 def extract_audio_from_video(video_path: str, audio_path: str):
+    """ Saves the audio files in audio_path extracted from the
+    video located in video_path """
+
     command = 'ffmpeg -i ' + video_path + ' -ab 2 -ar 44100 -vn ' \
               + audio_path
     subprocess.call(command, shell=True)
 
 
-def extract_audios(videos_path=None, audios_path=None, videos_extension=None, audios_extension=None):
+def extract_audios(movies=None, videos_path=None, audios_path=None, videos_extension=None, audios_extension=None):
+    """ Extract all the audios from the videos in the folder videos_path.
+    movies is a list with the name of all the videos """
+
     if videos_path is None:
         from helper.DatasetManager import videos_path
     if audios_path is None:
@@ -24,35 +30,44 @@ def extract_audios(videos_path=None, audios_path=None, videos_extension=None, au
         from helper.DatasetManager import videos_extension
     if audios_extension is None:
         from helper.DatasetManager import audios_extension
+    if movies is None:
+        movies = Dm.get_movies_names()
 
-    movies = Dm.get_movies_names()
     for movie in movies:
         input = videos_path + movie + videos_extension
         output = audios_path + movie + audios_extension
         extract_audio_from_video(input, output)
 
 
-def get_audio(movie_path: str):
-    _, data = wavfile.read(movie_path)
+def get_audio(audio_path: str):
+    """ Returns the audio samples """
+
+    _, data = wavfile.read(audio_path)
 
     return data
 
 
-def get_sampling_frequency(movie: str):
+def get_sampling_frequency(audio: str):
+    """ Returns the sampling frequency of the audio """
+
     from helper.DatasetManager import audios_path, audios_extension
 
-    fs = wavfile.read(audios_path + movie + audios_extension)
+    fs = wavfile.read(audios_path + audio + audios_extension)
     return fs[0]
 
 
 def get_audio_samples(video: str):
+    """ Returns the number of samples of the audio """
+
     from helper.DatasetManager import audios_path, audios_extension
 
     num_samples = get_audio(audios_path + video + audios_extension).shape[0]
     return num_samples
 
 
-def get_resized_audio3(audio_path: str, win_frames, print_info=False):
+def get_resized_audio(audio_path: str, win_frames, print_info=False):
+    """ Returns the audio in a matrix form (2, num_windows, samples_per_window).
+        The audio is windowed and  2 is because of the Left/Right channels """
 
     sampl_freq, audio_array = wavfile.read(audio_path)
     nb_samples = audio_array.shape[0]
@@ -70,64 +85,10 @@ def get_resized_audio3(audio_path: str, win_frames, print_info=False):
     return audio_array.transpose(2, 0, 1)
 
 
-##########################################################################......
-
-
-def get_resized_audio(index_video: int, win_frames: int, print_info=False):
-    from helper import DatasetManager as Dm
-    movies = Dm.get_movies_names()
-    predictions_length = Dm.get_predictions_length(movies)
-    audio_path = Dm.get_audio_path(movies[index_video])
-    sampl_freq, audio_array = wavfile.read(audio_path)
-    nb_samples = audio_array.shape[0]
-    if print_info:
-        print('{0} shape: {1}'.format(movies[index_video], audio_array.shape))
-    nb_frames = nb_samples // win_frames
-
-    audio_array = audio_array[:nb_frames * win_frames, :]
-    if print_info:
-        print('{0} shape: {1}'.format(movies[index_video], audio_array.shape))
-
-    audio_array = audio_array.reshape((nb_frames, win_frames, 2))
-    if print_info:
-        print('resized {0}: {1}\n'.format(movies[index_video], audio_array.shape))
-
-    cte = predictions_length[index_video] * 5
-    audio_array = audio_array[:cte, :, :]
-    audio_array = audio_array.reshape(int(audio_array.shape[0] / 5), 5, win_frames, 2)
-    if print_info:
-        print('resized {0}: {1}\n'.format(movies[index_video], audio_array.shape))
-    return audio_array
-
-
-def get_resized_audio2(index_video: int, win_frames, print_info=False):
-    movies = Dm.get_movies_names()
-    audio_path = Dm.get_audio_path(movies[index_video])
-    sampl_freq, audio_array = wavfile.read(audio_path)
-    nb_samples = audio_array.shape[0]
-    if print_info:
-        print('{0} shape: {1}'.format(movies[index_video], audio_array.shape))
-    nb_frames = nb_samples // win_frames
-    audio_array = audio_array[:nb_frames * win_frames, :]
-    if print_info:
-        print('{0} shape: {1}'.format(movies[index_video], audio_array.shape))
-
-    audio_array = audio_array.reshape((nb_frames, win_frames, 2))
-    if print_info:
-        print('resized {0}: {1}\n'.format(movies[index_video], audio_array.shape))
-
-    return audio_array.transpose(2, 0, 1)
-
-
-def get_resized_audios(videos: list, win_frames, print_info=False):
-    res = np.array([])
-    for cont, video in enumerate(videos):
-        resized_audio = get_resized_audio(cont, win_frames=win_frames, print_info=print_info)
-        res = np.append(res, resized_audio)
-    return res.reshape(int(res.shape[0] / (5 * win_frames * 2)), 5, win_frames, 2)
-
-
 def compute_STFT_and_MelBank(data, print_info=False):
+    """ It computes the STFT (Fast Fourier Transform applied to windowed signals)
+     and later it computes power banks using Mel filters """
+
     pre_emphasis = 0.97
     frame_size = 8.0/735  # time windowing
     frame_stride = 4.0/735  # time overlapping
@@ -135,7 +96,7 @@ def compute_STFT_and_MelBank(data, print_info=False):
     nfilt = 64  # number of filters
     NFFT = 512  # points for the STFT
 
-    input = np.array([])
+    computed_signal = np.array([])
 
     # Pre-emphasis
     for j in range(data.shape[1]):
@@ -196,31 +157,11 @@ def compute_STFT_and_MelBank(data, print_info=False):
         if print_info:
             print('filter_banks: {}'.format(filter_banks.shape))
 
-        input = np.append(input, filter_banks)
+        computed_signal = np.append(computed_signal, filter_banks)
         print_info=False
-    input = input.reshape(int(input.shape[0] / (96 * 64)), 96, 64)
+    computed_signal = computed_signal.reshape(int(computed_signal.shape[0] / (96 * 64)), 96, 64)
     if print_info:
-        print('Input: {}'.format(input.shape))
+        print('Computed signal: {}'.format(computed_signal.shape))
 
-    return input
+    return computed_signal
 
-
-def get_acoustic_data(videos: list, win_frames, print_info=False):
-
-    movies = Dm.get_movies_names()
-    predictions_length = Dm.get_predictions_length(movies)
-
-    resized_audios = np.array([])
-    for cont, video in enumerate(videos):
-        resized_audio = get_resized_audio2(cont, win_frames=win_frames, print_info=False)
-        computed_audio = compute_STFT_and_MelBank(resized_audio, print_info=False)
-        cte = predictions_length[cont] * 5
-        computed_audio = computed_audio[:cte, :, :]
-        computed_audio = computed_audio.reshape(int(computed_audio.shape[0] / 5), 5, 96, 64)
-        resized_audios = np.append(resized_audios, computed_audio)
-
-    resized_audios = resized_audios.reshape(int(resized_audios.shape[0]/(96*64*5)), 5, 96, 64)
-    if print_info:
-        print('resized: {0}\n'.format(resized_audios.shape))
-
-    return resized_audios
