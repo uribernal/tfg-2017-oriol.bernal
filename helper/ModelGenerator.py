@@ -15,7 +15,7 @@ def lstm_alberto_tfg_c3d(batch_size=32, time_steps=1, dropout_probability=.5, su
     output_dropout = Dropout(dropout_probability)(lstm)
     output = TimeDistributed(Dense(1, activation='tanh'), name='fc')(output_dropout)
 
-    model = Model(inputs=input_features, outputs=output)
+    model = Model(input=input_features, output=output)
 
     if summary:
         model.summary()

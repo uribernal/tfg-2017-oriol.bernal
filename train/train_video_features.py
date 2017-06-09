@@ -1,135 +1,135 @@
-def save_plots(iteration, train_loss, validation_loss, experiment_id):
-
-    path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/'
-    file = 'FINAL_lstm_emotion_classification_{experiment_id}_e{epoch:03}.png'
-
-    # Show plots
-    x = np.arange(len(validation_loss))
-    fig = plt.figure(1)
-    fig.suptitle('LOSS', fontsize=14, fontweight='bold')
-
-    # LOSS: TRAINING vs VALIDATION
-    plt.plot(x, train_loss, '--', linewidth=2, label='train')
-    plt.plot(x, validation_loss, label='validation')
-    plt.legend(loc='upper right')
-
-    # MIN
-    val, idx = min((val, idx) for (idx, val) in enumerate(validation_loss))
-    plt.annotate(str(val), xy=(idx, val), xytext=(idx, val-0.01),
-                arrowprops=dict(facecolor='black', shrink=0.0005))
-
-    plt.savefig(path+file.format(experiment_id=experiment_id, epoch=iteration), dpi=fig.dpi)
-    plt.close()
+import numpy as np
+import h5py
+import os
+from helper import DatasetManager as Dm
+from helper import ModelGenerator as Mg
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+from keras.optimizers import Adam
+from helper import TelegramBot as Bot
+from sklearn.metrics import mean_squared_error
+from helper.DatasetManager import compute_pcc
 
 
-def train_model(experiment_id, epochs, dropout_probability, batch_size, lr, time_steps):
-    # Path for the C3D features
-    c3d_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/DB/final/C3D_features_myData_resized.h5'
-    store_weights_root = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/model_snapshots/'
-    store_weights_file = 'FINAL_lstm_emotion_classification_{experiment_id}_e{epoch:03}.hdf5'
-
-    # Get list with the names of the movies
-    movies = Db.get_movies_names()
-
-    # Get data & labels
-    data, labels = Db.get_data_and_labels(movies, c3d_path)
-
-    res = data.shape[0] % batch_size
-    new_len = data.shape[0] - res
-    data = data[:new_len]
-    labels = labels[:new_len]
-
-    data = data.reshape(int(data.shape[0]/time_steps), time_steps, data.shape[1])
-    labels = labels.reshape(labels.shape[0], 1, 1)
-
-    print('Data shape: {}'.format(data.shape))
-    print('Labels shape: {}'.format(labels.shape))
-
-    # Get the LSTM model
-    model = Mg.lstm_alberto_tfg_c3d(batch_size, time_steps, dropout_probability, True)
-    #model = Mg.three_layers_lstm(2048, 1024, 512, batch_size, time_steps, dropout_probability, True)
-    #model = Mg.two_layers_lstm(2048, 512, batch_size, time_steps, dropout_probability, True)
-
-    # Split data into train and validation
-    num = int(0.7 * new_len / batch_size)
-    part = num*batch_size  # 70 %
-    x_train = data[0:part, :]
-    y_train = labels[0:part]
-    x_validation = data[part:, :]
-    y_validation = labels[part:]
-    print('Train Input shape: {}'.format(x_train.shape))
-    print('Train Output shape: {}\n'.format(y_train.shape))
-    print('Validation Input shape: {}'.format(x_validation.shape))
-    print('Validation Output shape: {}'.format(y_validation.shape))
-
-    # Compiling Model
-    print('Compiling model')
-    optimizer = Adam(lr=lr)
-    model.compile(loss='mean_squared_error',
-                  optimizer=optimizer)
-    print('Model Compiled!')
-
-    # Callbacks
-    stop_patience = 100
-    model_checkpoint = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/checkpoints/' +\
-                       store_weights_file.format(experiment_id=experiment_id, epoch=epochs)
-
+def get_callbacks(model_checkpoint, patience1, patience2):
     checkpointer = ModelCheckpoint(filepath=model_checkpoint,
                                    verbose=1,
                                    save_best_only=True)
-                                   #period=5)
 
     reduce_lr = ReduceLROnPlateau(monitor='val_loss',
                                   factor=0.1,
-                                  patience=5,######
-                                  min_lr=1e-10000,
+                                  patience=patience1,
+                                  min_lr=0,
                                   verbose=1)
 
-    early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=stop_patience)
+    early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=patience2)
 
-    # Training
+    return [checkpointer, reduce_lr, early_stop]
+
+
+def train_and_evaluate_model(x_train, y_train, x_validation, y_validation, batch_size, timesteps, drop_out):
+    # Path for the weights
+    store_weights_file = 'Video_features_e_{experiment_id}_b{batch_size:03}_d{drop_out:02}.hdf5'
+    model_checkpoint = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/checkpoints/' + \
+                       store_weights_file.format(experiment_id=experiment_id, batch_size=batch_size,
+                                                 drop_out=drop_out)
+    lr_patience = 10  # When to decrease lr
+    stop_patience = 50  # When to finish training if no learning
+    optimizer = Adam(lr=0.001)
+
+    # Get the LSTM model
+    lstm_model = Mg.lstm_alberto_tfg_c3d(batch_size, timesteps, drop_out, True)
+    lstm_model.compile(loss='mean_squared_error', optimizer=optimizer)
+    print('Model Compiled!')
+
     train_loss = []
     validation_loss = []
+    for j in range(100):
+        divided_data = (x_train.shape[0] // 20) * 20
 
-    history = model.fit(x_train,
-                        y_train,
-                        batch_size=batch_size,  # Number of samples per gradient update.
-                        validation_data=(x_validation, y_validation),
-                        verbose=2,
-                        epochs=epochs,
-                        callbacks=[checkpointer, reduce_lr, early_stop],
-                        shuffle=False)
+        for i in range(divided_data-1):
+            history = lstm_model.fit(x_train[20*i:(20*i+20)],
+                                     y_train[20*i:(20*i+20)],
+                                batch_size=batch_size,
+                                validation_data=(x_validation, y_validation),
+                                sample_weight=None,  ######################################
+                                verbose=2,
+                                nb_epoch=1,
+                                shuffle=False)
+            print('Reseting model states')
+            lstm_model.reset_states()
 
     train_loss.extend(history.history['loss'])
     validation_loss.extend(history.history['val_loss'])
+    minimum_val = np.min(validation_loss)
+    # Path for the figures
+    figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/mixed_features/' + \
+                   '{min:05}_Mixed_Features_e_{experiment_id}_b{batch_size:03}_d{drop_out:02}.png'
 
-    print('Reseting model states')
-    model.reset_states()
-    save_plots(epochs, train_loss, validation_loss, experiment_id)
-
-
-"""
-train_model(0, 100, .5, 256, 1e-5, 1)
-train_model(1, 100, .5, 32, 1e-5, 1)
-train_model(2, 100, .3, 256, 1e-7, 1)
-train_model(3, 100, .5, 256, 1e-3, 1)
-train_model(4, 1000, .5, 32, 1e-7, 1)
-train_model(5, 100, .5, 1, 1e-5, 1)
-train_model(6, 100, .5, 256, 1e-4, 1)
-train_model(7, 100, .5, 256, 1e-5, 1)
-train_model(8, 500, .5, 256, 1e-5, 1)
-train_model(9, 100, .5, 256, 1e-7, 1)
-train_model(10, 100, .5, 256, 1e-3, 1)
-train_model(11, 100, .5, 32, 1e-5, 1)
-train_model(12, 100, .5, 32, 1e-3, 1)
-train_model(13, 150, .5, 32, 1e-3, 1)
-train_model(14, 500, .5, 32, 1e-3, 1)
-train_model(16, 100, .5, 32, 1e-3, 1)
-train_model(20, 200, .5, 1, 1e-4, 1)
-train_model(21, 200, .5, 1, 1e-2, 1)#stateful = false
+    Bot.save_plots(train_loss, validation_loss, figures_path.format(min=minimum_val, experiment_id=experiment_id,
+                                                                    batch_size=batch_size,
+                                                                    drop_out=0.5))
+    return lstm_model, minimum_val
 
 
-"""
+def start_experiment(experiment_id, epochs, dropout_probability, batch_size, time_steps):
+
+    # Get list with the names of the movies
+    movies = Dm.get_movies_names()
+
+    # Get data & labels
+    path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5'
+    if not os.path.isfile(path):
+        # Create the HDF5 file
+        hdf = h5py.File(path, 'w')
+        hdf.close()
+
+    l = np.array([])
+    f = np.array([])
+    for movie in movies:
+        with h5py.File(path, 'r') as hdf:
+            labels = np.array(hdf.get('dev/labels/' + movie))
+            features = np.array(hdf.get('dev/features/' + movie))
+        labels = labels.reshape(labels.shape[0], 1, labels.shape[1])
+        features = features.reshape(features.shape[0], 1, features.shape[1])
+        l = np.append(l, labels)
+        f = np.append(f, features[:, :, :4096])
+
+    labels = l.reshape(l.shape[0] // 3, 1, 3)
+    features = f.reshape(f.shape[0] // 4096, 1, 4096)
+    end_index_of_training = features.shape[0] * 70 // 100
+    end_index_of_validation = features.shape[0] * 90 // 100
+
+    x_train = features[:end_index_of_training]
+    y_train = labels[:end_index_of_training, :, :1]
+    x_validation = features[end_index_of_training:end_index_of_validation]
+    y_validation = labels[end_index_of_training:end_index_of_validation, :, :1]
+    x_test = features[end_index_of_validation:]
+    y_test = labels[end_index_of_validation:, :, :1]
+
+    print('Train Input shape: {}'.format(x_train.shape))
+    print('Train Output shape: {}\n'.format(y_train.shape))
+    print('Validation Input shape: {}'.format(x_validation.shape))
+    print('Validation Output shape: {}\n'.format(y_validation.shape))
+    print('Test Input shape: {}'.format(x_test.shape))
+    print('Test Output shape: {}\n'.format(y_test.shape))
+
+    model, min_val = train_and_evaluate_model(x_train, y_train, x_validation, y_validation, batch_size, time_steps, drop_out)
+
+    predicted = model.predict(x_test)
+
+    # calculate root mean squared error
+    valenceMSE = mean_squared_error(predicted[:, 0, 0], y_test[:, 0, 0])
+    print('Valence MSE = {0}\n'.format(valenceMSE))
+    arousalMSE = mean_squared_error(predicted[:, 0, 1], y_test[:, 0, 1])
+    print('Arousal MSE = {0}\n'.format(arousalMSE))
+
+    # calculate PCC
+    valencePCC = compute_pcc(predicted[:, 0, 0], y_test[:, 0, 0])
+    print('Valence PCC = {0}\n'.format(valencePCC))
+    arousalPCC = compute_pcc(predicted[:, 0, 1], y_test[:, 0, 1])
+    print('Arousal PCC = {0}\n'.format(arousalPCC))
+
+
 
 if __name__ == "__main__":
 
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     experiment_id = 54
     iterations = 5000
     drop_out = .5
-    batch_size = 256
+    batch_size = 1
     lr = 1e-3
     time_steps = 1
     description = 'Experiment {0}: Using callbacks, drop-out={1}, batch-size={2}. starting-lr={3}, model=only-visual'.format(experiment_id, drop_out, batch_size, lr)
@@ -148,7 +148,7 @@ if __name__ == "__main__":
 
     #Bot.send_message(description)
     start = time.time()
-    train_model(experiment_id, iterations, drop_out, batch_size, lr, time_steps)
+    start_experiment(experiment_id, iterations, drop_out, batch_size, time_steps)
     end = time.time()
     #Bot.send_image(image_path)
     #Bot.send_elapsed_time(end - start)

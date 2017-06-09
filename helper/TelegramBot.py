@@ -53,7 +53,6 @@ def save_plots(train_loss, validation_loss, path):
 
     plt.savefig(path, dpi=fig.dpi)
     plt.close()
-    plt.close()
 
 
 def save_experiment(experiment_id, batch_size, drop_out, timesteps,  starting_lr, optimizer, model, lr_patience, stop_patience):

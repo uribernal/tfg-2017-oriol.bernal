@@ -12,6 +12,7 @@ import time
 from sklearn.metrics import mean_squared_error
 from helper.DatasetManager import compute_pcc
 
+
 def model_valence_arousal(batch_size=1, time_step=1, dropout_probability=0.5, summary=False):
     input_features = Input(batch_shape=(batch_size, time_step, 7168,), name='features')
     input_normalized = BatchNormalization(name='normalization')(input_features)
@@ -43,8 +44,8 @@ def get_callbacks(model_checkpoint, patience1, patience2):
     return [checkpointer, reduce_lr, early_stop]
 
 
-def train_and_evaluate_model(data_train, labels_train, data_validation, labels_validation, batch, time_step, optimizer):
-    model = model_valence_arousal(batch_size, time_step, dropout, True)
+def train_and_evaluate_model(data_train, labels_train, data_validation, labels_validation, batch, time_step, drop_out, optimizer):
+    model = model_valence_arousal(batch_size, time_step, drop_out, True)
     callbacks = get_callbacks(model_checkpoint, lr_patience, stop_patience)
     model.compile(loss='mean_squared_error', optimizer=optimizer)
     print('Model Compiled!')
@@ -65,15 +66,15 @@ def train_and_evaluate_model(data_train, labels_train, data_validation, labels_v
 
     train_loss.extend(history.history['loss'])
     validation_loss.extend(history.history['val_loss'])
-    min_val = np.min(validation_loss)
+    minimum_val = np.min(validation_loss)
     # Path for the figures
     figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/mixed_features/' + \
                    '{min:05}_Mixed_Features_e_{experiment_id}_b{batch_size:03}_d{drop_out:02}.png'
 
-    Bot.save_plots(train_loss, validation_loss, figures_path.format(min=min_val, experiment_id=experiment_id,
+    Bot.save_plots(train_loss, validation_loss, figures_path.format(min=minimum_val, experiment_id=experiment_id,
                                                                     batch_size=batch,
                                                                     drop_out=0.5))
-    return model, min_val
+    return model, minimum_val
 
 
 ######################################## GET DATA ############################################
@@ -105,14 +106,14 @@ features = f.reshape(f.shape[0] // 7168, 1, 7168)
 cte = 0
 n_folds = 1  # Number of iterations for cross-validation
 lr_patience = 10  # When to decrease lr
-stop_patience = 80  # When to finish trainning if no learning
+stop_patience = 50  # When to finish training if no learning
 timesteps = 1
 dropout = 0.5
 
 optimizers = [Adam(), SGD(), Adadelta(), RMSprop(), Adamax(), Adagrad()]
 starting_lrs = [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]
 starting_lr = 0.05
-optimizer = SGD(lr=starting_lr)
+optimizer = Adadelta(lr=starting_lr)
 ##############################################################################################
 
 #################################### EXPERIMENTS #############################################
@@ -122,8 +123,9 @@ pcc_valence_experiments = np.array([])
 pcc_arousal_experiments = np.array([])
 
 batch_sizes = [32, 64, 128, 256, 512, 1024, 2048]
-for i, (batch_size) in enumerate(batch_sizes):
-    experiment_id = i + cte
+batch_sizes = [1024]
+for j, batch_size in enumerate(batch_sizes):
+    experiment_id = j + cte
     Bot.send_message('Starting experiment {0}'.format(experiment_id))
 
     description = 'Experiment {0}: Audio_Features, Using callbacks, drop-out={1}, batch-size={2}.'.format(
@@ -159,26 +161,26 @@ for i, (batch_size) in enumerate(batch_sizes):
         x_test = f[end_index_of_validation:]
         y_test = l[end_index_of_validation:, :, :2]
 
-        model, min_val = train_and_evaluate_model(x_train, y_train, x_validation, y_validation, batch_size, timesteps, optimizer)
+        model, min_val = train_and_evaluate_model(x_train, y_train, x_validation, y_validation, batch_size, timesteps, dropout, optimizer)
 
         predicted = model.predict(x_test)
 
         # calculate root mean squared error
         valenceMSE = mean_squared_error(predicted[:, 0, 0], y_test[:, 0, 0])
-        print('Valence Score: %.2f MSE' % (valenceMSE))
+        print('Valence MSE = {0}\n'.format(valenceMSE))
         arousalMSE = mean_squared_error(predicted[:, 0, 1], y_test[:, 0, 1])
-        print('Arousal Score: %.2f MSE' % (arousalMSE))
+        print('Arousal MSE = {0}\n'.format(arousalMSE))
 
         # calculate PCC
         valencePCC = compute_pcc(predicted[:, 0, 0], y_test[:, 0, 0])
-        print('Valence Score: %.2f MSE' % (valencePCC))
+        print('Valence PCC = {0}\n'.format(valencePCC))
         arousalPCC = compute_pcc(predicted[:, 0, 1], y_test[:, 0, 1])
-        print('Arousal Score: %.2f MSE' % (arousalPCC))
+        print('Arousal PCC = {0}\n'.format(arousalPCC))
 
         mse_valence = np.append(mse_valence, valenceMSE)
         mse_arousal = np.append(mse_arousal, arousalMSE)
-        mse_valence = np.append(mse_valence, valencePCC)
-        mse_arousal = np.append(mse_arousal, arousalPCC)
+        pcc_valence = np.append(pcc_valence, valencePCC)
+        pcc_arousal = np.append(pcc_arousal, arousalPCC)
 
         Bot.send_message(description)
         figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/mixed_features/' + \
@@ -187,12 +189,12 @@ for i, (batch_size) in enumerate(batch_sizes):
                                          drop_out=dropout)
         end = time.time()
         Bot.send_image(image_path)
-        Bot.send_message('Valence MSE = {0}\n' +
-                         'Arousal MSE = {1}\n' +
-                         'Valence PCC = {2}\n' +
-                         'Arousal PCC = {3}\n'.format(mse_valence, mse_arousal, mse_valence, mse_arousal))
+        Bot.send_message('Valence MSE = {0}\n'.format(valenceMSE) +
+                         'Arousal MSE = {0}\n'.format(arousalMSE) +
+                         'Valence PCC = {0}\n'.format(valencePCC) +
+                         'Arousal PCC = {0}\n'.format(arousalPCC))
         Bot.send_elapsed_time(end - start)
-        
+
         model = None  # Clearing the NN.
 
     mse_valence_experiments = np.append(mse_valence_experiments, np.sum(mse_valence))
@@ -201,10 +203,10 @@ for i, (batch_size) in enumerate(batch_sizes):
     pcc_arousal_experiments = np.append(pcc_arousal_experiments, np.sum(pcc_arousal))
 
     Bot.send_message('FINAL VALUES FOR BATCH = {0}'.format(batch_size))
-    Bot.send_message('Valence MSE = {0}\n' +
-                     'Arousal MSE = {1}\n' +
-                     'Valence PCC = {2}\n' +
-                     'Arousal PCC = {3}\n'.format(np.sum(mse_valence), np.sum(mse_arousal), np.sum(pcc_valence), np.sum(pcc_arousal)))
+    Bot.send_message('Valence MSE = {0}\n'.format(np.sum(mse_valence)/mse_valence.shape[0]) +
+                     'Arousal MSE = {0}\n'.format(np.sum(mse_arousal)/mse_arousal.shape[0]) +
+                     'Valence PCC = {0}\n'.format(np.sum(pcc_valence)/pcc_valence.shape[0]) +
+                     'Arousal PCC = {0}\n'.format(np.sum(pcc_arousal))/pcc_arousal.shape[0])
 
     Bot.save_experiment(experiment_id, batch_size, dropout, timesteps,  starting_lr, str(optimizer.__class__)[25:-2], 'Mixed_features', lr_patience, stop_patience)
 Bot.send_message('Finished')
