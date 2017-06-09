@@ -10,8 +10,11 @@ from helper import DatasetManager as Dm
 
 
 def video_2_30fps(video_input_path: str, video_output_path: str, video_shape: tuple =None):
-    if video_shape == None:
-        s=''
+    """ Convert a video to 30 fps and store it in video_output_path.
+    If video_shape is indicated it also changes video's width and height. """
+
+    if video_shape is None:
+        s = ''
     else:
         s = '-s ' + str(video_shape[0]) + 'x' + str(video_shape[1])
 
@@ -21,22 +24,25 @@ def video_2_30fps(video_input_path: str, video_output_path: str, video_shape: tu
 
 
 def videos_2_30fps(videos_path=None, resized_videos_path=None, videos_extension=None, video_shape=None):
-    if videos_path==None:
+    """ Convert all the videos to 30 fps and store it in resized_videos_path.
+    If video_shape is indicated it also changes videos' width and height. """
+
+    if videos_path is None:
         from helper.DatasetManager import videos_path
-    if resized_videos_path == None:
+    if resized_videos_path is None:
         from helper.DatasetManager import resized_videos_path
-    if videos_extension == None:
+    if videos_extension is None:
         from helper.DatasetManager import videos_extension
 
     movies = Dm.get_movies_names()
     for movie in movies:
-        input = videos_path + movie + videos_extension
-        output = resized_videos_path + movie + videos_extension
+        input_path = videos_path + movie + videos_extension
+        output_path = resized_videos_path + movie + videos_extension
 
-        video_2_30fps(input, output, video_shape=video_shape)
+        video_2_30fps(input_path, output_path, video_shape=video_shape)
 
 
-def video_to_array(video_path, resize=None, start_frame=0, end_frame=None,
+def video_to_array(video_path: str, resize=None, start_frame=0, end_frame=None,
                    length=None, dim_ordering='th'):
     """ Convert the video at the path given in to an array
     Args:
@@ -106,7 +112,7 @@ def video_to_array(video_path, resize=None, start_frame=0, end_frame=None,
     return video
 
 
-def get_num_frames(video_path):
+def get_num_frames(video_path: str):
     """ Return the number of frames of the video track of the video given """
 
     if cv2.__version__ >= '3.0.0':
@@ -123,7 +129,7 @@ def get_num_frames(video_path):
     return num_frames
 
 
-def get_duration(video_path):
+def get_duration(video_path: str):
     """ Return the duration of the video track of the video given """
 
     if cv2.__version__ >= '3.0.0':
@@ -146,7 +152,7 @@ def get_duration(video_path):
     return duration
 
 
-def get_fps(video_path):
+def get_fps(video_path: str):
     """ Return the fps of the video given """
 
     if cv2.__version__ >= '3.0.0':
@@ -165,7 +171,7 @@ def get_fps(video_path):
     return fps
 
 
-def reproduce_video(video_path):
+def reproduce_video(video_path: str):
     """ Reproduces the video in RGB """
 
     cap = cv2.VideoCapture(video_path)
@@ -185,89 +191,25 @@ def reproduce_video(video_path):
     cv2.destroyAllWindows()
 
 
-def get_resized_video2(video_path, input_size=(112,112), print_info=False):
+def get_resized_video(video: str, video_path=None, video_extension=None, input_size=(112, 112), print_info=False):
+    """ Returns the video in a matrix form (num_clips, 3, 16, width, height).
+    Clips are sets of 16 frames and the 3 is because of the RGB channels """
 
-    video_array = read_video(video_path, input_size)
-    if print_info:
-     print('Video shape: {0}'.format(video_array.shape))
-    video_array = video_array.transpose(1, 0, 2, 3)
-    len = video_array.shape[0] // 16
-    video_array = video_array[:len * 16, :, :, :]
-    video_array = video_array.reshape(video_array.shape[0] // 16, 16, video_array.shape[1], video_array.shape[2],
-                                      video_array.shape[3])
-    video_array = video_array.transpose(0, 2, 1, 3, 4)
-    if print_info:
-        print('Resized video: {0}\n'.format(video_array.shape))
-    return video_array
-
-
-def get_visual_data_video(video: str, video_path=None, video_extension=None, print_info=False):
     if video_path is None:
         from helper.DatasetManager import videos_path as video_path
     if video_extension is None:
         from helper.DatasetManager import videos_extension as video_extension
 
     input_video = video_path + video + video_extension
-    resized_video = get_resized_video2(input_video, print_info=print_info)
-    return resized_video
-
-###############################################################################################
-
-def read_video(input_video: str, resize: tuple=(112, 112)):
-    vid = video_to_array(input_video, resize=resize)
-
-    return vid
-
-
-def get_visual_data(videos: list, input_size, num_frames, print_info=False):
-    from helper import DatasetManager as Dm
-    data = np.array([])
-    for cont, video in enumerate(videos):
-        input_video = Dm.get_video_path(video)
-        video_array = read_video(input_video, input_size)
-        if print_info:
-            print('{0} shape: {1}'.format(video, video_array.shape))
-        nb_frames = get_num_frames(input_video)
-        nb_clips = nb_frames // num_frames
-        video_array = video_array.transpose(1, 0, 2, 3)
-        video_array = video_array[:nb_clips * num_frames, :, :, :]
-        video_array = video_array.reshape((nb_clips, num_frames, 3, 112, 112))
-        video_array = video_array.transpose(0, 2, 1, 3, 4)
-        if print_info:
-            print('resized {0}: {1}\n'.format(video, video_array.shape))
-        data = np.append(data, video_array)
-
-    return data.reshape(int(data.shape[0]/(3*16*112*112)), 3, 16, 112, 112)
-
-
-def get_resized_video(index_video, video_path, input_size, print_info=False):
-    from helper import DatasetManager as Dm
-
-    movies = Dm.get_movies_names()
-    predictions_length = Dm.get_predictions_length(movies)
-    fps = get_fps(video_path)
-    video_array = read_video(video_path, input_size)
+    video_array = video_to_array(input_video, resize=input_size)
     if print_info:
-     print('{0} shape: {1}'.format(movies[index_video], video_array.shape))
-    lab = predictions_length[index_video]
-    resized_number_of_frames = lab * 5 * int(np.round(fps))
-    video_array = video_array[:, :resized_number_of_frames, :, :]
+        print('Video shape: {0}'.format(video_array.shape))
     video_array = video_array.transpose(1, 0, 2, 3)
-    video_array = video_array.reshape((lab, int(video_array.shape[0]/lab), 3, input_size[0], input_size[1]))
+    chop = video_array.shape[0] // 16
+    video_array = video_array[:chop * 16, :, :, :]
+    video_array = video_array.reshape(video_array.shape[0] // 16, 16, video_array.shape[1], video_array.shape[2],
+                                      video_array.shape[3])
+    video_array = video_array.transpose(0, 2, 1, 3, 4)
     if print_info:
-        print('resized {0}: {1}'.format(movies[index_video], video_array.shape))
+        print('Resized video: {0}\n'.format(video_array.shape))
     return video_array
-
-
-def get_visual(videos: list, print_info=False):
-    from helper.DatasetManager import videos_path, videos_extension
-    visual = np.array([])
-    for cont, video in enumerate(videos):
-        input_video = videos_path + video + videos_extension
-
-        resized_video = get_resized_video(cont, input_video, (98, 64), print_info=print_info)
-        resized_video = resized_video[:, :120, :, :, :]
-        visual = np.append(visual, resized_video)
-    return visual.reshape(int(visual.shape[0]/(120*3*98*64)), 120, 3, 98, 64)
-
-

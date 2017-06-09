@@ -103,7 +103,7 @@ def extract_features(video_name, video_path=None, video_extension=None, features
         if video_extension is None:
             from helper.DatasetManager import videos_extension as video_extension
 
-        video_array = Vh.get_visual_data_video(video_name, video_path=video_path, video_extension = video_extension, print_info=True)
+        video_array = Vh.get_resized_video(video_name, video_path=video_path, video_extension = video_extension, print_info=True)
 
 
     print('Loading C3D network...')
