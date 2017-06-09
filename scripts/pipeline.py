@@ -16,15 +16,13 @@ def get_model(summary=False):
     output_dropout = Dropout(0.5)(lstm)
     output = TimeDistributed(Dense(2, activation='tanh'), name='fc')(output_dropout)
 
-    model = Model(input=input_features, output=output)
-    model.load_weights('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/checkpoints/train_with_Mix_features_e_1_b064_d0.5.hdf5')
+    best_model = Model(input=input_features, output=output)
+    best_model.load_weights('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/'
+                            'best_model.hdf5')
     if summary:
-        model.summary()
-    '''
-    import keras
-    model = keras.models.load_model('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/checkpoints/train_with_Mix_features_e_1_b064_d0.5.hdf5')
-     '''
-    return model
+        best_model.summary()
+
+    return best_model
 
 video_input = '/home/uribernal/Desktop/data/dev/movies/'
 video_30fps_path = '/home/uribernal/Desktop/data/dev/resized_movies/'
@@ -46,22 +44,23 @@ if False:
     output_vid = video_30fps_path + video_name + video_extension
     video_2_30fps(input_vid, output_vid, video_shape=video_shape)
 
-    # EXTRACT VIDEO FEATURES
-    video_features = extract_video_features(video_name, video_30fps_path)
-    print('Video features: {0}\n'.format(video_features.shape))
+# EXTRACT VIDEO FEATURES
+video_features = extract_video_features(video_name, video_30fps_path)
+print('Video features: {0}\n'.format(video_features.shape))
 
+# EXTRACT AUDIO FEATURES
+audio_features = extract_audio_features(video_name, audio_path)
+print('Audio features: {0}\n'.format(audio_features.shape))
 
-    # EXTRACT AUDIO FEATURES
-    audio_features = extract_audio_features(video_name, audio_path)
-    print('Audio features: {0}\n'.format(audio_features.shape))
-
-    # FUSE FEATURES BY CONCATENATION
-    features = np.append(video_features, audio_features, axis=1)
-    num_feat = video_features.shape[1] + audio_features.shape[1]
-    print('Features: {0}\n'.format(features.shape))
+# FUSE FEATURES BY CONCATENATION
+features = np.append(video_features, audio_features, axis=1)
+features = features.reshape(features.shape[0], 1, features.shape[1])
+print('Features: {0}\n'.format(features.shape))
 
 # PREDICT
-model = get_model(summary=True)
+model = get_model(summary=False)
+predictions = model.predict(features)
+print('Predictions: {0}\n'.format(predictions.shape))
 
 # SHOW PREDICTIONS
-
+print(predictions)

@@ -26,7 +26,7 @@ acoustic_features_path = ''
 videos_extension = '.mp4'
 audios_extension = '.wav'
 
-
+results_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/results.txt'
 
 def get_video_path(video:str):
     return  videos_path + video + videos_extension
@@ -151,3 +151,13 @@ def get_mixed_data(videos: list, win_frames, print_info=False):
         print('\033[92m acoustic shape {0}\033[4m'.format(acoustic.shape))
     #res = acoustic
     return res
+
+def compute_pcc(y_pred, y_true):
+    m1 = np.mean(y_pred)
+    m2 = np.mean(y_true)
+    y_pred_norm = y_pred -m1
+    y_true_norm = y_true - m2
+    nom = np.sum(y_pred_norm*y_true_norm)
+    den = np.sqrt(np.sum(y_pred_norm**2))*np.sqrt(np.sum(y_true_norm**2))
+
+    return nom/den

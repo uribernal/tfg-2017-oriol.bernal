@@ -54,3 +54,18 @@ def save_plots(train_loss, validation_loss, path):
     plt.savefig(path, dpi=fig.dpi)
     plt.close()
     plt.close()
+
+
+def save_experiment(experiment_id, batch_size, drop_out, timesteps,  starting_lr, optimizer, model, lr_patience, stop_patience):
+    import os
+    from helper.DatasetManager import results_path
+    if not os.path.isfile(results_path):
+        # Create the txt file
+        file = open(results_path, 'a')
+        file.write('experiment_id' + ', ' + 'batch_size' + ', ' + 'drop_out' + ', ' + 'timesteps' + ', ' + 'starting_lr' + ', ' + 'optimizer' + ', ' + 'model' + ', ' + 'lr_patience' + ', ' + 'stop_patience' + '\n')
+        file.close()
+
+    file = open(results_path, 'a')
+
+    file.write(str(experiment_id) + ', ' + str(batch_size) + ', ' + str(drop_out) + ', ' + str(timesteps) + ', ' + str(starting_lr) + ', ' + str(optimizer) + ', ' + str(model) + ', ' + str(lr_patience) + ', ' + str(stop_patience)+'\n')
+    file.close()

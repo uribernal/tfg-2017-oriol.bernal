@@ -1,3 +1,4 @@
+*.tar.gz
 *.hdf5
 *.h5
 # Byte-compiled / optimized / DLL files
@@ -146,3 +147,16 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+5wTMA2ZfsNdX9gY0.antic.tar.gz
+antic/fine_tuning/Audio/extract_vgg19_features.py
+antic/fine_tuning/Audio/train_raw_audio_files.py
+antic/fine_tuning/Audio/train_with_VGG19_features.py
+antic/fine_tuning/Audio/vgg19.py
+antic/fine_tuning/Video/c3d_conv.py
+antic/fine_tuning/Video/extract_c3d_features.py
+antic/fine_tuning/Video/train_with_201_activities.py
+antic/fine_tuning/Video/train_with_C3D_features.py
+antic/fine_tuning/Video/vgg19.py
+antic/fine_tuning/__init__.py
+antic/results/
+results/

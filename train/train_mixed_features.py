@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from helper import DatasetManager as Dm
 from helper import ModelGenerator as Mg
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
-from keras.optimizers import Adam
+from keras.optimizers import Adam, Adadelta, Adagrad, Adamax, SGD, RMSprop
 from helper import TelegramBot as Bot
 import os
 from keras.layers import LSTM, BatchNormalization, Dense, Dropout, Input, TimeDistributed
@@ -90,28 +90,20 @@ experiment_id = 0
 lr_patience = 10  # When to decrease lr
 stop_patience = 80  # When to finish trainning if no learning
 
-# GET DATA
-l = np.array([])
-f = np.array([])
-for movie in movies:
-    with h5py.File(path, 'r') as hdf:
-        labels = np.array(hdf.get('dev/labels/' + movie))
-        features = np.array(hdf.get('dev/features/' + movie))
-    labels = labels.reshape(labels.shape[0], 1, labels.shape[1])
-    features = features.reshape(features.shape[0], 1, features.shape[1])
-    l = np.append(l, labels)
-    f = np.append(f, features)
-labels = l.reshape(l.shape[0] // 3, 1, 3)
-features = f.reshape(f.shape[0] // 7168, 1, 7168)
+
 
 batch_sizes = [128, 256, 512, 1024, 32, 64, 2048]
+optimizers = [Adam, SGD, Adadelta, RMSprop, Adamax, Adagrad]
+starting_lrs = [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]
+
 batch_sizes = [640]
 for experiment_id, batch_size in enumerate(batch_sizes):
     experiment_id = experiment_id+1
     Bot.send_message('Start')
     time_step = 1
     dropout = 0.5
-    optimizer = Adam(lr=0.001)
+    starting_lr = 0.001
+    optimizer = Adam(lr=starting_lr)
 
     description = 'Experiment {0}: Audio_Features, Using callbacks, drop-out={1}, batch-size={2}.'.format(
         experiment_id, dropout, batch_size)
@@ -173,7 +165,6 @@ for experiment_id, batch_size in enumerate(batch_sizes):
         testScore = mean_squared_error(predicted[:, 0, 1], y_test[:, 0, 1])
         print('Arousal Score: %.2f RMSE' % (testScore))
 
-
         print('VALENCE Test prediction shape: {0}, sum = {1}'.format(predicted.shape, valenceScore))
 
         print('AROUSAL Test prediction shape: {0}, sum = {1}'.format(predicted.shape, testScore))
@@ -197,6 +188,7 @@ for experiment_id, batch_size in enumerate(batch_sizes):
     Bot.send_message('MSE arousal: {}'.format(mse_arousal))
 
     Bot.send_message('Finished')
+    Bot.save_experiment(experiment_id, batch_size, dropout, time_step,  starting_lr, str(optimizer.__class__)[25:-2], 'Mixed_features', lr_patience, stop_patience)
 
     for i in range(predicted.shape[0]):
         print('{}   {}'.format(predicted[i,0,0], y_test[i,0,0]))
