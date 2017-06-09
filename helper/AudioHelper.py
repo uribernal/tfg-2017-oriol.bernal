@@ -48,8 +48,29 @@ def get_sampling_frequency(movie: str):
 def get_audio_samples(video: str):
     from helper.DatasetManager import audios_path, audios_extension
 
-    samp = get_audio(audios_path + video + audios_extension).shape[0]
-    return samp
+    num_samples = get_audio(audios_path + video + audios_extension).shape[0]
+    return num_samples
+
+
+def get_resized_audio3(audio_path: str, win_frames, print_info=False):
+
+    sampl_freq, audio_array = wavfile.read(audio_path)
+    nb_samples = audio_array.shape[0]
+    if print_info:
+        print('Audio shape: {0}'.format(audio_array.shape))
+    nb_frames = nb_samples // win_frames
+    audio_array = audio_array[:nb_frames * win_frames, :]
+    if print_info:
+        print('Windowed audio shape: {0}'.format(audio_array.shape))
+
+    audio_array = audio_array.reshape((nb_frames, win_frames, 2))
+    if print_info:
+        print('Resized audio: {0}\n'.format(audio_array.shape))
+
+    return audio_array.transpose(2, 0, 1)
+
+
+##########################################################################......
 
 
 def get_resized_audio(index_video: int, win_frames: int, print_info=False):

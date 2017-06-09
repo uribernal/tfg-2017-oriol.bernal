@@ -185,6 +185,34 @@ def reproduce_video(video_path):
     cv2.destroyAllWindows()
 
 
+def get_resized_video2(video_path, input_size=(112,112), print_info=False):
+
+    video_array = read_video(video_path, input_size)
+    if print_info:
+     print('Video shape: {0}'.format(video_array.shape))
+    video_array = video_array.transpose(1, 0, 2, 3)
+    len = video_array.shape[0] // 16
+    video_array = video_array[:len * 16, :, :, :]
+    video_array = video_array.reshape(video_array.shape[0] // 16, 16, video_array.shape[1], video_array.shape[2],
+                                      video_array.shape[3])
+    video_array = video_array.transpose(0, 2, 1, 3, 4)
+    if print_info:
+        print('Resized video: {0}\n'.format(video_array.shape))
+    return video_array
+
+
+def get_visual_data_video(video: str, video_path=None, video_extension=None, print_info=False):
+    if video_path is None:
+        from helper.DatasetManager import videos_path as video_path
+    if video_extension is None:
+        from helper.DatasetManager import videos_extension as video_extension
+
+    input_video = video_path + video + video_extension
+    resized_video = get_resized_video2(input_video, print_info=print_info)
+    return resized_video
+
+###############################################################################################
+
 def read_video(input_video: str, resize: tuple=(112, 112)):
     vid = video_to_array(input_video, resize=resize)
 

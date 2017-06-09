@@ -16,6 +16,10 @@ resized_videos_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-m
 audios_path = '/home/uribernal/Desktop/MediaEval2016/devset/continuous-movies/' \
               'audios/'
 
+data_path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/emotional_impact.h5'
+
+features_path = '/home/uribernal/Desktop/data/emotional_impact.h5'
+
 visual_features_path = ''
 acoustic_features_path = ''
 

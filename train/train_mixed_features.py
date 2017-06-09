@@ -105,13 +105,13 @@ labels = l.reshape(l.shape[0] // 3, 1, 3)
 features = f.reshape(f.shape[0] // 7168, 1, 7168)
 
 batch_sizes = [128, 256, 512, 1024, 32, 64, 2048]
-batch_sizes = [64]
+batch_sizes = [640]
 for experiment_id, batch_size in enumerate(batch_sizes):
     experiment_id = experiment_id+1
     Bot.send_message('Start')
     time_step = 1
     dropout = 0.5
-    optimizer = Adam(lr=0.01)
+    optimizer = Adam(lr=0.001)
 
     description = 'Experiment {0}: Audio_Features, Using callbacks, drop-out={1}, batch-size={2}.'.format(
         experiment_id, dropout, batch_size)
@@ -124,7 +124,7 @@ for experiment_id, batch_size in enumerate(batch_sizes):
                                                  drop_out=dropout)
     callbacks = get_callbacks(model_checkpoint, lr_patience, stop_patience)
 
-    n_folds = 10
+    n_folds = 1
 
     mse_valence = np.array([])
     mse_arousal = np.array([])
