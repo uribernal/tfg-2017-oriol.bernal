@@ -7,6 +7,11 @@ to mobile phones.
 import telegram
 import numpy as np
 import matplotlib.pyplot as plt
+import json
+import xlsxwriter
+import os
+import datetime
+import time
 
 
 def send_message(message: str):
@@ -34,6 +39,16 @@ def send_elapsed_time(elapsed: int):
     send_message('Elapsed Time: {0:02d}h{1:02d}min'.format(hours, minutes))
 
 
+def send_results(image_path=None, scores=None):
+    if image_path is not None:
+        send_image(image_path)
+    if scores is not None:
+        send_message('Valence MSE = {0}\n'.format(scores[0]) +
+                     'Arousal MSE = {0}\n'.format(scores[1]) +
+                     'Valence PCC = {0}\n'.format(scores[2]) +
+                     'Arousal PCC = {0}\n'.format(scores[3]))
+
+
 def save_plots(train_loss, validation_loss, path):
 
     # Show plots
@@ -55,16 +70,88 @@ def save_plots(train_loss, validation_loss, path):
     plt.close()
 
 
-def save_experiment(experiment_id, batch_size, drop_out, timesteps,  starting_lr, optimizer, model, lr_patience, stop_patience):
-    import os
-    from helper.DatasetManager import results_path
-    if not os.path.isfile(results_path):
-        # Create the txt file
-        file = open(results_path, 'a')
-        file.write('experiment_id' + ', ' + 'batch_size' + ', ' + 'drop_out' + ', ' + 'timesteps' + ', ' + 'starting_lr' + ', ' + 'optimizer' + ', ' + 'model' + ', ' + 'lr_patience' + ', ' + 'stop_patience' + '\n')
-        file.close()
+def get_experiments():
+    path = 'C:/Users/Uri/Desktop/book.json'
+    if os.path.isfile(path):
+        with open(path) as data_file:
+            data = json.load(data_file)
+    else:
+        data = {}
 
-    file = open(results_path, 'a')
+    return data
 
-    file.write(str(experiment_id) + ', ' + str(batch_size) + ', ' + str(drop_out) + ', ' + str(timesteps) + ', ' + str(starting_lr) + ', ' + str(optimizer) + ', ' + str(model) + ', ' + str(lr_patience) + ', ' + str(stop_patience)+'\n')
-    file.close()
+
+def save_experiment(optimizer, lr, p1, p2, input_features, batchsize, timesteps, dropout, layers, cells, scores):
+    # Compute date
+    date = datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
+
+    # Get experiments
+    experiments = get_experiments()
+
+    # Get last experiment
+    experiment_id = len(experiments.keys())
+    print(experiment_id)
+    # Update experiments
+    experiments[str(experiment_id)] = {
+        'log': date,
+        'optimizer': optimizer,
+        'starting_lr': lr,
+        'patience1': p1,
+        'patience2': p2,
+        'input': input_features,
+        'batch_size': batchsize,
+        'timesteps': timesteps,
+        'dropout': dropout,
+        'lstm_layers': layers,
+        'lstm_cells': cells,
+        'test_scores': scores}
+
+    # Update JSON
+    s = json.dumps(experiments)
+    print(s)
+    with open('C:/Users/Uri/Desktop/book.json', 'w') as f:
+        f.write(s)
+
+    # Update XLS
+    workbook = xlsxwriter.Workbook('C:/Users/Uri/Desktop/book.xlsx')
+    worksheet = workbook.add_worksheet()
+    d = experiments
+    worksheet.write(0, 0, 'experiment_id')
+    print(d.keys())
+
+    # col = d.keys()
+    col = 0
+    for key in d.keys():
+        row = 0
+        worksheet.write(col + 1, row, key)
+        for item in d[key]:
+            if col == 0:
+                worksheet.write(col, row + 1, item)
+            worksheet.write(col + 1, row + 1, d[key][item])
+            row += 1
+        col += 1
+
+    workbook.close()
+
+
+def get_actual_experiment_id():
+    experiments = get_experiments()
+    return len(experiments.keys())
+
+
+def start_experiment():
+    start = time.time()
+    experiment_id = get_actual_experiment_id()
+    send_message('Starting experiment {0}...'.format(experiment_id))
+    return start
+
+
+def end_experiment(start, image_path, scores):
+    end = time.time()
+    send_elapsed_time(end-start)
+    send_results(image_path, scores)
+
+#start = start_experiment()
+#save_experiment(...)
+#save_plots(image_path)
+#end_experiment(start, image_path, scores)

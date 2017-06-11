@@ -2,6 +2,7 @@
 This assistant ...
 """
 import numpy as np
+from helper import AudioHelper as Ah
 from keras import backend as K
 K.set_image_dim_ordering('th')
 
@@ -119,14 +120,12 @@ def get_videos_info(videos: list):
 
 
 def get_audio_info(video: str):
-    from helper import AudioHelper as Ah
     sampling_freq = Ah.get_sampling_frequency(video)
     audio_samples = Ah.get_audio_samples(video)
     return sampling_freq, audio_samples
 
 
 def get_audios_info(videos: list):
-    from helper import AudioHelper as Ah
     sampling_freq = []
     audio_samples = []
     for cont, movie in enumerate(videos):
