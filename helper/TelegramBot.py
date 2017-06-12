@@ -71,7 +71,7 @@ def save_plots(train_loss, validation_loss, path):
 
 
 def get_experiments():
-    path = 'C:/Users/Uri/Desktop/book.json'
+    path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/log.json'
     if os.path.isfile(path):
         with open(path) as data_file:
             data = json.load(data_file)
@@ -81,7 +81,7 @@ def get_experiments():
     return data
 
 
-def save_experiment(optimizer, lr, p1, p2, input_features, batchsize, timesteps, dropout, layers, cells, scores):
+def save_experiment(optimizer, batchsize, timesteps, dropout, n_folds, lr, p1, p2, input_features, layers, cells, scores):
     # Compute date
     date = datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
 
@@ -95,25 +95,29 @@ def save_experiment(optimizer, lr, p1, p2, input_features, batchsize, timesteps,
     experiments[str(experiment_id)] = {
         'log': date,
         'optimizer': optimizer,
-        'starting_lr': lr,
-        'patience1': p1,
-        'patience2': p2,
-        'input': input_features,
         'batch_size': batchsize,
         'timesteps': timesteps,
         'dropout': dropout,
+        'n_folds': n_folds,
         'lstm_layers': layers,
         'lstm_cells': cells,
-        'test_scores': scores}
+        'starting_lr': lr,
+        'lr_patience': p1,
+        'stop_patience': p2,
+        'input': input_features,
+        'MSE valence': scores[0],
+        'MSE arousal': scores[1],
+        'PCC valence': scores[2],
+        'PCC arousal': scores[3]}
 
     # Update JSON
     s = json.dumps(experiments)
     print(s)
-    with open('C:/Users/Uri/Desktop/book.json', 'w') as f:
+    with open('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/log.json', 'w') as f:
         f.write(s)
 
     # Update XLS
-    workbook = xlsxwriter.Workbook('C:/Users/Uri/Desktop/book.xlsx')
+    workbook = xlsxwriter.Workbook('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/log.xls')
     worksheet = workbook.add_worksheet()
     d = experiments
     worksheet.write(0, 0, 'experiment_id')
@@ -143,7 +147,7 @@ def start_experiment():
     start = time.time()
     experiment_id = get_actual_experiment_id()
     send_message('Starting experiment {0}...'.format(experiment_id))
-    return start
+    return start, experiment_id
 
 
 def end_experiment(start, image_path, scores):
@@ -151,7 +155,4 @@ def end_experiment(start, image_path, scores):
     send_elapsed_time(end-start)
     send_results(image_path, scores)
 
-#start = start_experiment()
-#save_experiment(...)
-#save_plots(image_path)
-#end_experiment(start, image_path, scores)
+

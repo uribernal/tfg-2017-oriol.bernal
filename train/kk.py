@@ -44,106 +44,13 @@ def get_callbacks(model_checkpoint, patience1, patience2):
     return [checkpointer, reduce_lr, early_stop]
 
 
-def train_and_evaluate_model(data_train, labels_train, data_validation, labels_validation, batch, time_step, drop_out, optimizer):
-    model = model_valence_arousal(batch_size, time_step, drop_out, True)
-    callbacks = get_callbacks(model_checkpoint, lr_patience, stop_patience)
-    model.compile(loss='mean_squared_error', optimizer=optimizer)
-    print('Model Compiled!')
-
-    train_loss = []
-    validation_loss = []
-    history = model.fit(data_train,
-                        labels_train,
-                        batch_size=batch,
-                        validation_data=(data_validation, labels_validation),
-                        sample_weight=None,  ######################################
-                        verbose=2,
-                        nb_epoch=10000,
-                        shuffle=False,
-                        callbacks=callbacks)
-    print('Reseting model states')
-    model.reset_states()
-
-    train_loss.extend(history.history['loss'])
-    validation_loss.extend(history.history['val_loss'])
-    minimum_val = np.min(validation_loss)
-    # Path for the figures
-    figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/mixed_features/' + \
-                   '{min:05}_Mixed_Features_e_{experiment_id}_b{batch_size:03}_d{drop_out:02}.png'
-
-    Bot.save_plots(train_loss, validation_loss, figures_path.format(min=minimum_val, experiment_id=experiment_id,
-                                                                    batch_size=batch,
-                                                                    drop_out=0.5))
-    return model, minimum_val
-
-
-######################################## GET DATA ############################################
-movies = Dm.get_movies_names()
-path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5'
-if not os.path.isfile(path):
-    # Create the HDF5 file
-    hdf = h5py.File(path, 'w')
-    hdf.close()
-
-l = np.array([])
-f = np.array([])
-for movie in movies:
-    with h5py.File(path, 'r') as hdf:
-        labels = np.array(hdf.get('dev/labels/' + movie))
-        features = np.array(hdf.get('dev/features/' + movie))
-    labels = labels.reshape(labels.shape[0], 1, labels.shape[1])
-    features = features.reshape(features.shape[0], 1, features.shape[1])
-    l = np.append(l, labels)
-    f = np.append(f, features)
-
-labels = l.reshape(l.shape[0] // 3, 1, 3)
-features = f.reshape(f.shape[0] // 7168, 1, 7168)
-##############################################################################################
-
-
-######################################## CTE #################################################
-
-cte = 0
-n_folds = 1  # Number of iterations for cross-validation
-lr_patience = 10  # When to decrease lr
-stop_patience = 50  # When to finish training if no learning
-timesteps = 1
-dropout = 0.5
-
-optimizers = [Adam(), SGD(), Adadelta(), RMSprop(), Adamax(), Adagrad()]
-starting_lrs = [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]
-starting_lr = 0.05
-optimizer = Adadelta(lr=starting_lr)
-##############################################################################################
-
-#################################### EXPERIMENTS #############################################
-mse_valence_experiments = np.array([])
-mse_arousal_experiments = np.array([])
-pcc_valence_experiments = np.array([])
-pcc_arousal_experiments = np.array([])
-
-batch_sizes = [32, 64, 128, 256, 512, 1024, 2048]
-batch_sizes = [1024]
-for j, batch_size in enumerate(batch_sizes):
-    experiment_id = j + cte
-    Bot.send_message('Starting experiment {0}'.format(experiment_id))
-
-    description = 'Experiment {0}: Audio_Features, Using callbacks, drop-out={1}, batch-size={2}.'.format(
-        experiment_id, dropout, batch_size)
-
-    # Path for the weights
-    store_weights_file = 'Mixed_features_e_{experiment_id}_b{batch_size:03}_d{drop_out:02}.hdf5'
-
-    model_checkpoint = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/checkpoints/' + \
-                       store_weights_file.format(experiment_id=experiment_id, batch_size=batch_size,
-                                                 drop_out=dropout)
+def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dropout, n_folds, features, labels, lr_patience, stop_patience, figures_path):
 
     mse_valence = np.array([])
     mse_arousal = np.array([])
     pcc_valence = np.array([])
     pcc_arousal = np.array([])
     for i in range(n_folds):
-        start = time.time()
         print("Running Fold", i + 1, "/", n_folds)
         seed = np.arange(0, labels.shape[0], dtype=np.int32)
         random.shuffle(seed)
@@ -152,7 +59,6 @@ for j, batch_size in enumerate(batch_sizes):
 
         end_index_of_training = features.shape[0] * 7 // 10
         end_index_of_validation = features.shape[0] * 9 // 10
-        len_test = features.shape[0] * 1 // 10
 
         x_train = f[:end_index_of_training]
         y_train = l[:end_index_of_training, :, :2]
@@ -161,7 +67,36 @@ for j, batch_size in enumerate(batch_sizes):
         x_test = f[end_index_of_validation:]
         y_test = l[end_index_of_validation:, :, :2]
 
-        model, min_val = train_and_evaluate_model(x_train, y_train, x_validation, y_validation, batch_size, timesteps, dropout, optimizer)
+        model = model_valence_arousal(batch_size, timesteps, dropout, True)
+        # Path for the weights
+        store_weights_file = 'Mixed_features_e_{experiment_id}_b{batch_size:03}_d{dropout:02}.hdf5'
+
+        model_checkpoint = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/checkpoints/' + \
+                           store_weights_file.format(experiment_id=experiment_id, batch_size=batch_size,
+                                                     dropout=dropout)
+
+        callbacks = get_callbacks(model_checkpoint, lr_patience, stop_patience)
+        model.compile(loss='mean_squared_error', optimizer=optimizer)
+        print('Model Compiled!')
+
+        train_loss = []
+        validation_loss = []
+        history = model.fit(x_train, y_train,
+                            batch_size = batch_size,
+                            validation_data = (x_validation, y_validation),
+                            verbose = 2,
+                            nb_epoch = 10000,
+                            shuffle = False,
+                            callbacks = callbacks)
+        print('Reseting model states')
+        #model.reset_states()
+
+        train_loss.extend(history.history['loss'])
+        validation_loss.extend(history.history['val_loss'])
+        minimum_val = np.min(validation_loss)
+
+        figures_path = figures_path.format(min=minimum_val, experiment_id=experiment_id, batch_size=batch_size, dropout=dropout, n_fold=i)
+        Bot.save_plots(train_loss, validation_loss, figures_path)
 
         predicted = model.predict(x_test)
 
@@ -177,37 +112,83 @@ for j, batch_size in enumerate(batch_sizes):
         arousalPCC = compute_pcc(predicted[:, 0, 1], y_test[:, 0, 1])
         print('Arousal PCC = {0}\n'.format(arousalPCC))
 
+        Bot.send_message('Valence MSE = {0}\n'.format(valenceMSE) +
+                         'Arousal MSE = {0}\n'.format(arousalMSE) +
+                         'Valence PCC = {0}\n'.format(valencePCC) +
+                         'Arousal PCC = {0}\n'.format(arousalPCC))
+
         mse_valence = np.append(mse_valence, valenceMSE)
         mse_arousal = np.append(mse_arousal, arousalMSE)
         pcc_valence = np.append(pcc_valence, valencePCC)
         pcc_arousal = np.append(pcc_arousal, arousalPCC)
 
-        Bot.send_message(description)
-        figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/mixed_features/' + \
-                       '{min:05}_Mixed_Features_e_{experiment_id}_b{batch_size:03}_d{drop_out:02}.png'
-        image_path = figures_path.format(min=min_val, experiment_id=experiment_id, batch_size=batch_size,
-                                         drop_out=dropout)
-        end = time.time()
-        Bot.send_image(image_path)
-        Bot.send_message('Valence MSE = {0}\n'.format(valenceMSE) +
-                         'Arousal MSE = {0}\n'.format(arousalMSE) +
-                         'Valence PCC = {0}\n'.format(valencePCC) +
-                         'Arousal PCC = {0}\n'.format(arousalPCC))
-        Bot.send_elapsed_time(end - start)
+    scores = []
+    scores.append(np.mean(mse_valence))
+    scores.append(np.mean(mse_arousal))
+    scores.append(np.mean(pcc_valence))
+    scores.append(np.mean(pcc_arousal))
 
-        model = None  # Clearing the NN.
+    return scores, figures_path
 
-    mse_valence_experiments = np.append(mse_valence_experiments, np.sum(mse_valence))
-    mse_arousal_experiments = np.append(mse_arousal_experiments, np.sum(mse_arousal))
-    pcc_valence_experiments = np.append(pcc_valence_experiments, np.sum(pcc_valence))
-    pcc_arousal_experiments = np.append(pcc_arousal_experiments, np.sum(pcc_arousal))
 
-    Bot.send_message('FINAL VALUES FOR BATCH = {0}'.format(batch_size))
-    Bot.send_message('Valence MSE = {0}\n'.format(np.sum(mse_valence)/mse_valence.shape[0]) +
-                     'Arousal MSE = {0}\n'.format(np.sum(mse_arousal)/mse_arousal.shape[0]) +
-                     'Valence PCC = {0}\n'.format(np.sum(pcc_valence)/pcc_valence.shape[0]) +
-                     'Arousal PCC = {0}\n'.format(np.sum(pcc_arousal))/pcc_arousal.shape[0])
+def get_optimizer(opt, star_lr):
+    optimizer = Adam(lr=star_lr)
+    if opt == 'Adadelta':
+        optimizer = Adadelta(lr=star_lr)
+    elif opt == 'SGD':
+        optimizer = SGD(lr=star_lr)
+    elif opt == 'RMSprop':
+        optimizer = RMSprop(lr=star_lr)
+    elif opt == 'Adamax':
+        optimizer = Adamax(lr=star_lr)
+    elif opt == 'Adagrad':
+        optimizer = Adagrad(lr=star_lr)
+    return optimizer
 
-    Bot.save_experiment(experiment_id, batch_size, dropout, timesteps,  starting_lr, str(optimizer.__class__)[25:-2], 'Mixed_features', lr_patience, stop_patience)
-Bot.send_message('Finished')
-##############################################################################################
+
+def train(optimizer, batch_size, timesteps, dropout, n_folds=1, starting_lr=1e-3, lr_patience=10, stop_patience=50):
+    optimizer = get_optimizer(optimizer, starting_lr)
+
+    ######################################## GET DATA ############################################
+    movies = Dm.get_movies_names()
+    figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/mixed_features/' + \
+                   '{min:05}_Mixed_Features_e_{experiment_id}_b{batch_size:03}_d{dropout:02}_fold{n_fold}.png'
+    path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5'
+    if not os.path.isfile(path):
+        # Create the HDF5 file
+        hdf = h5py.File(path, 'w')
+        hdf.close()
+
+    l = np.array([])
+    f = np.array([])
+    for movie in movies:
+        with h5py.File(path, 'r') as hdf:
+            labels = np.array(hdf.get('dev/labels/' + movie))
+            features = np.array(hdf.get('dev/features/' + movie))
+        labels = labels.reshape(labels.shape[0], 1, labels.shape[1])
+        features = features.reshape(features.shape[0], 1, features.shape[1])
+        l = np.append(l, labels)
+        f = np.append(f, features)
+
+    labels = l.reshape(l.shape[0] // 3, 1, 3)
+    features = f.reshape(f.shape[0] // 7168, 1, 7168)
+    ##############################################################################################
+
+
+    #################################### EXPERIMENTS #############################################
+    start, experiment_id = Bot.start_experiment()
+
+    scores, figures_path = train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dropout, n_folds, features, labels, lr_patience, stop_patience, figures_path)
+
+    Bot.save_experiment(optimizer, batch_size, timesteps, dropout, n_folds, starting_lr, lr_patience, stop_patience, 'Mixed Features', 1, 512, scores)
+
+    Bot.end_experiment(start, figures_path, scores)
+
+
+
+if __name__ == '__main__':
+    #train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-1, lr_patience=10, stop_patience=30)
+    train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-2, lr_patience=10, stop_patience=30)
+    train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-3, lr_patience=10, stop_patience=30)
+    train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    train('Adam', 64, 1, 0.5, n_folds=10, starting_lr=1e-3, lr_patience=10, stop_patience=30)
