@@ -18,6 +18,7 @@ movies = Dm.get_movies_names()
 movies_train = movies[:-2]
 movies_val = [movies[-2]]
 movies_test = [movies[-1]]
+Bot.send_message('Experiment 0')
 
 db_path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5'
 for movie in movies_val:
@@ -73,8 +74,8 @@ for i in range(10):
                                  shuffle=False)
         lstm_model.reset_states()
 
-train_loss.extend(history.history['loss'])
-validation_loss.extend(history.history['val_loss'])
+    train_loss.extend(history.history['loss'])
+    validation_loss.extend(history.history['val_loss'])
 minimum_val = np.min(validation_loss)
 
 predicted = lstm_model.predict(features_test)
@@ -90,7 +91,6 @@ print('Valence PCC = {0}\n'.format(valencePCC))
 arousalPCC = compute_pcc(predicted[:, 0, 1], labels_test[:, 0, 1])
 print('Arousal PCC = {0}\n'.format(arousalPCC))
 
-Bot.send_message('Experiment 0')
 Bot.send_message('Valence MSE = {0}\n'.format(valenceMSE) +
                  'Arousal MSE = {0}\n'.format(arousalMSE) +
                  'Valence PCC = {0}\n'.format(valencePCC) +

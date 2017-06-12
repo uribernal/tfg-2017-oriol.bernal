@@ -1,6 +1,14 @@
 # EMOTIONAL IMPACT OF MOVIES
 
-The prediction of the emotional impact of movies is here considered as the prediction of the expected emotion. The expected emotion is the emotion that the majority of the audience feels in response to the same content. In other words, the expected emotion is the expected value of experienced (i.e. induced) emotion in a population. While the induced emotion is subjective and context dependent, the expected emotion can be considered objective, as it reflects the more-or-less unanimous response of a general audience to a given stimulus 
+This Thesis explores different approaches using deep learning techniques to predict emotions in videos.
+
+Working with videos implies a huge amount of data including visual frames and acoustic samples. The first step of the project is basically to extract features to represent the videos in small sets of arrays. This procedure is done using pretrained models based on Convolutional Networks, the state of the art in visual recognition. Firstly, visual features are extracted using 3D convolutions and acoustic features are extracted using VGG19, a pretrained convolutional model for images fine-tuned to accept the audio inputs.
+
+Later, these features are fed into Recurrent models that exploit the temporal information.
+
+Emotions are measured in terms of valence and arousal, values between [-1, 1]. Additionally, the same techniques are also used to attempt to predict fear scenes. In consequence, this thesis deals with both regression and classification problems.
+
+Several architectures and different parameters have been tested in order to achieve the best performance. Finally, the results will be published in the MediaEval 2017 Challenge and compared to the state-of-the-art solutions.
 
 ## Getting Started
 
@@ -58,9 +66,9 @@ Add additional notes about how to deploy this on a live system
 
 ## Built With
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+* [Keras](https://keras.io/) - The main framework used
+* [Theano](http://deeplearning.net/software/theano/) - Backend Used
+* [Python-telegram-bot](https://python-telegram-bot.readthedocs.io/en/latest/) - Used to send results
 
 ## Contributing
 
@@ -76,9 +84,6 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
 
