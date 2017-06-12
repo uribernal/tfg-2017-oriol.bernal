@@ -1,13 +1,12 @@
 import numpy as np
 import h5py
 import os
-from helper import DatasetManager as Dm
 import matplotlib.pyplot as plt
 
 
-movies = Dm.get_movies_names()
+movies = ['After_The_Rain', 'Attitude_Matters', 'Barely_legal_stories', 'Between_Viewings', 'Big_Buck_Bunny', 'Chatter', 'Cloudland', 'Damaged_Kung_Fu', 'Decay', 'Elephant_s_Dream', 'First_Bite', 'Full_Service', 'Islands', 'Lesson_Learned', 'Norm', 'Nuclear_Family', 'On_time', 'Origami', 'Parafundit', 'Payload', 'Riding_The_Rails', 'Sintel', 'Spaceman', 'Superhero', 'Tears_of_Steel', 'The_room_of_franz_kafka', 'The_secret_number', 'To_Claire_From_Sonny', 'Wanted', 'You_Again']
 
-path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5'
+path = 'C:/Users/Uri/Desktop/training_feat.h5'
 if not os.path.isfile(path):
     # Create the HDF5 file
     hdf = h5py.File(path, 'w')
@@ -27,6 +26,10 @@ for movie in movies:
 
 labels = l.reshape(l.shape[0] // 3, 1, 3)
 
+fig = plt.figure(0)
 plt.bar(np.arange(len(movies)), num_scenes)
 plt.bar(np.arange(len(movies)), num_fear_scenes)
-plt.show
+plt.show()
+fig = plt.figure(1)
+plt.bar(np.arange(len(movies)), np.array(num_fear_scenes)/np.array(num_scenes))
+plt.show()
