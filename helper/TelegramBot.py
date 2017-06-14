@@ -90,11 +90,10 @@ def save_experiment(optimizer, batchsize, timesteps, dropout, n_folds, lr, p1, p
 
     # Get last experiment
     experiment_id = len(experiments.keys())
-    print(experiment_id)
     # Update experiments
     experiments[str(experiment_id)] = {
         'log': date,
-        'optimizer': optimizer,
+        'optimizer': str(optimizer.__class__)[25:-2],
         'batch_size': batchsize,
         'timesteps': timesteps,
         'dropout': dropout,
@@ -112,7 +111,6 @@ def save_experiment(optimizer, batchsize, timesteps, dropout, n_folds, lr, p1, p
 
     # Update JSON
     s = json.dumps(experiments)
-    print(s)
     with open('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/log.json', 'w') as f:
         f.write(s)
 
@@ -121,7 +119,6 @@ def save_experiment(optimizer, batchsize, timesteps, dropout, n_folds, lr, p1, p
     worksheet = workbook.add_worksheet()
     d = experiments
     worksheet.write(0, 0, 'experiment_id')
-    print(d.keys())
 
     # col = d.keys()
     col = 0

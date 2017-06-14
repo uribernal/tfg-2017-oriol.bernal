@@ -14,7 +14,7 @@ from helper.DatasetManager import compute_pcc
 
 
 def model_valence_arousal(batch_size=1, time_step=1, dropout_probability=0.5, summary=False):
-    input_features = Input(batch_shape=(batch_size, time_step, 7168,), name='features')
+    input_features = Input(batch_shape=(1, time_step, 7168,), name='features')
     input_normalized = BatchNormalization(name='normalization')(input_features)
     input_dropout = Dropout(dropout_probability)(input_normalized)
     lstm = LSTM(512, return_sequences=True, stateful=False, name='lsmt1')(input_dropout)
@@ -44,7 +44,7 @@ def get_callbacks(model_checkpoint, patience1, patience2):
     return [checkpointer, reduce_lr, early_stop]
 
 
-def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dropout, n_folds, features, labels, lr_patience, stop_patience, figures_path):
+def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dropout, n_folds, features, labels, lr_patience, stop_patience, fig_path):
 
     mse_valence = np.array([])
     mse_arousal = np.array([])
@@ -95,7 +95,7 @@ def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dr
         validation_loss.extend(history.history['val_loss'])
         minimum_val = np.min(validation_loss)
 
-        figures_path = figures_path.format(min=minimum_val, experiment_id=experiment_id, batch_size=batch_size, dropout=dropout, n_fold=i)
+        figures_path = fig_path.format(min=minimum_val, experiment_id=experiment_id, batch_size=batch_size, dropout=dropout, n_fold=i)
         Bot.save_plots(train_loss, validation_loss, figures_path)
 
         predicted = model.predict(x_test)
@@ -112,11 +112,12 @@ def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dr
         arousalPCC = compute_pcc(predicted[:, 0, 1], y_test[:, 0, 1])
         print('Arousal PCC = {0}\n'.format(arousalPCC))
 
+        '''
         Bot.send_message('Valence MSE = {0}\n'.format(valenceMSE) +
                          'Arousal MSE = {0}\n'.format(arousalMSE) +
                          'Valence PCC = {0}\n'.format(valencePCC) +
                          'Arousal PCC = {0}\n'.format(arousalPCC))
-
+        '''
         mse_valence = np.append(mse_valence, valenceMSE)
         mse_arousal = np.append(mse_arousal, arousalMSE)
         pcc_valence = np.append(pcc_valence, valencePCC)
@@ -188,7 +189,22 @@ def train(optimizer, batch_size, timesteps, dropout, n_folds=1, starting_lr=1e-3
 
 if __name__ == '__main__':
     #train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-1, lr_patience=10, stop_patience=30)
-    train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-2, lr_patience=10, stop_patience=30)
-    train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-3, lr_patience=10, stop_patience=30)
-    train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
-    train('Adam', 64, 1, 0.5, n_folds=10, starting_lr=1e-3, lr_patience=10, stop_patience=30)
+    #train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-2, lr_patience=10, stop_patience=30)
+    #train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-3, lr_patience=10, stop_patience=30)
+    #train('Adam', 64, 1, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    #train('Adam', 64, 1, 0.5, n_folds=10, starting_lr=1e-3, lr_patience=10, stop_patience=30)
+    #train('Adam', 512, 1, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    #train('Adadelta', 512, 1, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    #train('RMSprop', 512, 1, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    # mirar dropout
+    #train('Adam', 512, 1, 0.1, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    #train('Adam', 512, 1, 0.3, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    #train('Adam', 512, 1, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    #train('Adam', 512, 1, 0.6, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    #train('Adam', 512, 1, 0.9, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    train('Adam', 512, 10, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    '''
+    train('Adam', 512, 1, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    train('Adam', 512, 1, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    train('Adam', 512, 1, 0.5, n_folds=1, starting_lr=1e-4, lr_patience=10, stop_patience=30)
+    '''

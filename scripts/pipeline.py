@@ -1,8 +1,12 @@
 import numpy as np
+import h5py
 from scripts.extract_audios import extract_audio
 from scripts.videos_2_30fps import video_2_30fps
 from scripts.extract_video_features import extract_video_features
 from scripts.extract_audio_features import extract_audio_features
+from sklearn.metrics import mean_squared_error
+from helper.DatasetManager import compute_pcc
+from helper.DatasetManager import compress_labels
 
 
 def get_model(summary=False):
@@ -46,7 +50,10 @@ if False:
 
 # EXTRACT VIDEO FEATURES
 video_features = extract_video_features(video_name, video_30fps_path)
+with h5py.File('/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5', 'r') as hdf:
+    y_test = np.array(hdf.get('dev/labels/On_time'))
 print('Video features: {0}\n'.format(video_features.shape))
+print('Labels: {0}\n'.format(y_test.shape))
 
 # EXTRACT AUDIO FEATURES
 audio_features = extract_audio_features(video_name, audio_path)
@@ -63,4 +70,16 @@ predictions = model.predict(features)
 print('Predictions: {0}\n'.format(predictions.shape))
 
 # SHOW PREDICTIONS
-print(predictions)
+# calculate root mean squared error
+valenceMSE = mean_squared_error(compress_labels(predictions[:, 0, 0])[:-1], compress_labels(y_test[:, 0]))
+print('Valence MSE = {0}\n'.format(valenceMSE))
+arousalMSE = mean_squared_error(compress_labels(predictions[:, 0, 1])[:-1], compress_labels(y_test[:, 1]))
+print('Arousal MSE = {0}\n'.format(arousalMSE))
+
+# calculate PCC
+valencePCC = compute_pcc(compress_labels(predictions[:, 0, 0])[:-1], compress_labels(y_test[:, 0]))
+print('Valence PCC = {0}\n'.format(valencePCC))
+arousalPCC = compute_pcc(compress_labels(predictions[:, 0, 1])[:-1], compress_labels(y_test[:, 1]))
+print('Arousal PCC = {0}\n'.format(arousalPCC))
+
+print(predictions, y_test)

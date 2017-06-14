@@ -139,9 +139,57 @@ def get_audios_info(videos: list):
 def compute_pcc(y_pred, y_true):
     m1 = np.mean(y_pred)
     m2 = np.mean(y_true)
-    y_pred_norm = y_pred -m1
+    y_pred_norm = y_pred - m1
     y_true_norm = y_true - m2
     nom = np.sum(y_pred_norm*y_true_norm)
     den = np.sqrt(np.sum(y_pred_norm**2))*np.sqrt(np.sum(y_true_norm**2))
 
     return nom/den
+
+
+def expand_labels(labels):
+    a1 = np.ones(9)
+    a2 = np.ones(10)
+    new_array = a1 * labels[0]
+
+    sequence = [a1, a2, a1, a1, a2, a1, a2, a1]
+    j = 1
+    for i in range(labels.shape[0] - 1):
+        if j == 8:
+            j = 0
+        cte = sequence[j]
+        a = (cte * labels[i] + cte * labels[i + 1]) / 2.0
+        new_array = np.append(new_array, a)
+        j += 1
+    if j == 8:
+        j = 0
+    a = sequence[j] * labels[-1]
+    new_array = np.append(new_array, a)
+    return new_array
+
+
+def compress_labels(labels):
+    a1 = 9
+    a2 = 10
+
+    sequence = [a1, a2, a1, a1, a2, a1, a2, a1]
+
+    cont = True
+    cte = a1
+    new_array = [labels[0]]
+    i = cte
+    j = 1
+    while cont:
+        rest = labels.shape[0] - i
+        if j == 8:
+            j = 0
+        cte = sequence[j]
+        a = 2*labels[i]-new_array[-1]
+        i += cte
+        if rest <= 29:
+            cont = False
+        new_array = np.append(new_array, a)
+        j += 1
+    a = labels[-1]
+    new_array = np.append(new_array, a)
+    return new_array
