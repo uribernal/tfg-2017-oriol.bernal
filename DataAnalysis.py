@@ -5,41 +5,86 @@ import matplotlib.pyplot as plt
 
 
 movies = ['After_The_Rain', 'Attitude_Matters', 'Barely_legal_stories', 'Between_Viewings', 'Big_Buck_Bunny', 'Chatter', 'Cloudland', 'Damaged_Kung_Fu', 'Decay', 'Elephant_s_Dream', 'First_Bite', 'Full_Service', 'Islands', 'Lesson_Learned', 'Norm', 'Nuclear_Family', 'On_time', 'Origami', 'Parafundit', 'Payload', 'Riding_The_Rails', 'Sintel', 'Spaceman', 'Superhero', 'Tears_of_Steel', 'The_room_of_franz_kafka', 'The_secret_number', 'To_Claire_From_Sonny', 'Wanted', 'You_Again']
+db_path = 'C:/Users/Uri/Desktop/labels.h5'
 
-windows = False
-if windows:
-    path = 'C:/Users/Uri/Desktop/training_feat.h5'
-else:
-    path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5'
 
-if not os.path.isfile(path):
-    # Create the HDF5 file
-    hdf = h5py.File(path, 'w')
-    hdf.close()
+def plot_fear_flow(movie, plot=True, save_path=None):
+    with h5py.File(db_path, 'r') as hdf:
+        labels = np.array(hdf.get(movie))
+    # Show Fear for each film
+    fig = plt.figure(0)
+    fig.suptitle(movie, fontsize=14, fontweight='bold')
+    x = np.arange(labels.shape[0])*5
+    plt.plot(x, labels[:, 2], label='valence')
+    if plot:
+        plt.show()
+    if save_path is not None:
+        plt.savefig(save_path+movie)
+        plt.close()
 
-l = np.array([])
-num_scenes = np.array([])
-num_fear_scenes = np.array([])
 
-for movie in movies:
-    with h5py.File(path, 'r') as hdf:
-        labels = np.array(hdf.get('dev/labels/' + movie))
-    labels = labels.reshape(labels.shape[0], 1, labels.shape[1])
-    num_scenes = np.append(num_scenes, labels.shape[0])
-    num_fear_scenes = np.append(num_fear_scenes, np.count_nonzero(labels[:,:,2]))
-    l = np.append(l, labels)
-labels = l.reshape(l.shape[0] // 3, 1, 3)
+def plot_valence_arousal_flow(movie, plot=True, save_path=None):
+    with h5py.File(db_path, 'r') as hdf:
+        labels = np.array(hdf.get(movie))
+    # Show Fear for each film
+    fig = plt.figure(0)
+    fig.suptitle(movie, fontsize=14, fontweight='bold')
+    x = np.arange(labels.shape[0])*5
+    plt.plot(x, labels[:, 0], label='valence')
+    plt.plot(x, labels[:, 1], label='arousal')
+    plt.legend(loc='upper right')
+    if plot:
+        plt.show()
+    if save_path is not None:
+        plt.savefig(save_path+movie)
+        plt.close()
 
-print(np.sum(num_fear_scenes))
-print(np.sum(np.count_nonzero(labels[:,:,2])))
 
-# Show Histogram
-fig = plt.figure(0)
-plt.bar(np.arange(len(movies)), num_scenes)
-plt.bar(np.arange(len(movies)), num_fear_scenes)
-plt.show()
+def plot_fps(videos, videos_path=None, videos_extension= None, plot=True, save_path=None):
+    from helper.VideoHelper import get_fps
 
-# Show Normalized Histogram
-fig = plt.figure(1)
-plt.bar(np.arange(len(movies)), np.array(num_fear_scenes)/np.array(num_scenes))
-plt.show()
+    if videos_path is None:
+        from helper.DatasetManager import videos_path
+    if videos_extension is None:
+        from helper.DatasetManager import videos_extension
+
+    fps = []
+    for video in videos:
+        path = videos_path+video+videos_extension
+        fps.append(get_fps(path))
+
+    fig = plt.figure(0)
+    fig.suptitle('FPS of the DB', fontsize=14, fontweight='bold')
+    x = np.arange(len(fps))
+    plt.plot(x, fps, label='valence')
+    plt.legend(loc='upper right')
+    if plot:
+        plt.show()
+    if save_path is not None:
+        plt.savefig(save_path + video)
+        plt.close()
+
+
+def plot_durations(videos, videos_path=None, videos_extension= None, plot=True, save_path=None):
+    from helper.VideoHelper import get_duration
+
+    if videos_path is None:
+        from helper.DatasetManager import videos_path
+    if videos_extension is None:
+        from helper.DatasetManager import videos_extension
+
+    duration = []
+    for video in videos:
+        path = videos_path + video + videos_extension
+        duration.append(get_duration(path))
+
+    fig = plt.figure(0)
+    fig.suptitle('FPS of the DB', fontsize=14, fontweight='bold')
+    x = np.arange(len(duration))
+    plt.plot(x, duration, label='valence')
+    plt.legend(loc='upper right')
+    if plot:
+        plt.show()
+    if save_path is not None:
+        plt.savefig(save_path + video)
+        plt.close()
