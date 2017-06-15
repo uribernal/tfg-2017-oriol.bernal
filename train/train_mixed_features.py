@@ -76,9 +76,11 @@ def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dr
 
 
     # Start Training
+    t_loss = np.array([])
+    v_los = np.array([])
     train_loss = []
     validation_loss = []
-    for i in range(150):
+    for i in range(10):
         # shuffle movies
         for j, movie in enumerate(movies_train):
             print('Epoch {0}, movie {1}'.format(i, j))
@@ -99,13 +101,16 @@ def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dr
                                      shuffle=False)
             lstm_model.reset_states()
 
-        train_loss.extend(history.history['loss'])
-        validation_loss.extend(history.history['val_loss'])
-    minimum_val = np.min(validation_loss)
+            train_loss.extend(history.history['loss'])
+            validation_loss.extend(history.history['val_loss'])
+        t_loss = np.append(t_loss, np.sum(train_loss[-28:])/28)
+        v_los = np.append(v_los, np.sum(validation_loss[-28:])/28)
+
+    minimum_val = np.min(v_los)
 
     fig_path = figures_path.format(min=minimum_val, experiment_id=experiment_id, batch_size=batch_size, dropout=dropout,
                                    n_fold=1)
-    Bot.save_plots(train_loss, validation_loss, fig_path)
+    Bot.save_plots(t_loss, v_los, fig_path)
 
     predicted = lstm_model.predict(features_test)
 
