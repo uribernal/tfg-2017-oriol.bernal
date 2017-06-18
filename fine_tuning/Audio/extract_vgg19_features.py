@@ -14,7 +14,8 @@ def get_vgg19_model():
     return model
 
 
-def extract_features(audio_name, audio_path = None, audio_extension = None, features_path=None, saved_data=False,  win_frames=23520, num_stft=96, num_filter_banks=64):
+def extract_features(audio_name, audio_path=None, audio_extension=None, features_path=None, saved_data=False,
+                     win_frames=23520, num_stft=512, num_filter_banks=64):
     if features_path is not None:
         # If file doesn't exist, create it
         if not os.path.isfile(features_path):
@@ -31,33 +32,32 @@ def extract_features(audio_name, audio_path = None, audio_extension = None, feat
         if audio_path is None:
             from helper.DatasetManager import audios_path as audio_path
         if audio_extension is None:
-            from helper.DatasetManager import audios_extension as video_extension
+            from helper.DatasetManager import audios_extension as audio_extension
 
-        input = audio_path + audio_name + video_extension
-        resized_audio = Ah.get_resized_audio(input, win_frames=win_frames, print_info=False)
-        acoustic_data = Ah.compute_STFT_and_MelBank(resized_audio, print_info=False)
-
+        input_audio = audio_path + audio_name + audio_extension
+        resized_audio = Ah.get_resized_audio(input_audio, win_frames=win_frames, print_info=False)
+        acoustic_data = Ah.compute_STFT_and_MelBank(resized_audio, num_stft, num_filter_banks, print_info=False)
+        print(acoustic_data.shape)
 
     cte = acoustic_data.shape[0]
     a = np.append(acoustic_data, acoustic_data)
     acoustic_data = np.append(a, acoustic_data)
     computed_audio = acoustic_data.reshape(3, cte, 96, 64)
-    # print(computed_audio.shape)
+    #  print(computed_audio.shape)
     computed_audio = computed_audio.transpose(1, 0, 2, 3)
-    #print(computed_audio.shape)
+    #  print(computed_audio.shape)
 
     print('Extracting features...')
     predictions = model.predict(computed_audio[:, :, :, :], batch_size=1)
     predictions = predictions.reshape(predictions.shape[0],
                                       predictions.shape[1] * predictions.shape[2] * predictions.shape[3])
-    #print(predictions.shape)
+    #  print(predictions.shape)
 
     # If h5py file path is given, save features in the h5py file
     if features_path is not None:
         with h5py.File(features_path, 'r+') as hdf:
-            hdf.create_dataset('dev/acoustic_features/' + audio_name, data=predictions, compression='gzip', compression_opts=9)
+            hdf.create_dataset('dev/acoustic_features/' + audio_name, data=predictions,
+                               compression='gzip', compression_opts=9)
         print('{} stored'.format(audio_name))
 
     return predictions
-
-

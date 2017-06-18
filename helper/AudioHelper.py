@@ -85,7 +85,7 @@ def get_resized_audio(audio_path: str, win_frames, print_info=False):
     return audio_array.transpose(2, 0, 1)
 
 
-def compute_STFT_and_MelBank(data, print_info=False):
+def compute_STFT_and_MelBank(data, NFFT, nfilt, print_info=False):
     """ It computes the STFT (Fast Fourier Transform applied to windowed signals)
      and later it computes power banks using Mel filters """
 
@@ -93,7 +93,7 @@ def compute_STFT_and_MelBank(data, print_info=False):
     frame_size = 8.0/735  # time windowing
     frame_stride = 4.0/735  # time overlapping
     sample_rate = 44100  # fs
-    nfilt = 64  # number of filters
+    #  nfilt = 64  # number of filters
     NFFT = 512  # points for the STFT
 
     computed_signal = np.array([])
