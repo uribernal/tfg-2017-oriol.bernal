@@ -10,7 +10,8 @@ def get_vgg19_model():
     print('Loading VGG19 network...')
     # this could also be the output a different Keras model or layer
     input_tensor = Input(shape=(3, 96, 64))
-    model = VGG19(input_tensor=input_tensor, weights='imagenet', include_top=False, input_shape=None)
+    model = VGG19(input_tensor=input_tensor, weights=None, include_top=False, input_shape=None)
+    model.load_weights('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/fine_tuning/Audio/vgg19_weights.h5')
     return model
 
 

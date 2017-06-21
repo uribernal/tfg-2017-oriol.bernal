@@ -94,7 +94,7 @@ def compute_STFT_and_MelBank(data, NFFT, nfilt, print_info=False):
     frame_stride = 4.0/735  # time overlapping
     sample_rate = 44100  # fs
     #  nfilt = 64  # number of filters
-    NFFT = 512  # points for the STFT
+    #  NFFT = 512  # points for the STFT
 
     computed_signal = np.array([])
 

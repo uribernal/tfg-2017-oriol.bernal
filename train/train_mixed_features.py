@@ -1,31 +1,22 @@
 import numpy as np
 import h5py
 from helper import DatasetManager as Dm
-from helper import ModelGenerator as Mg
-import matplotlib.pyplot as plt
-from helper import DatasetManager as Dm
-from helper import ModelGenerator as Mg
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from keras.optimizers import Adam, Adadelta, Adagrad, Adamax, SGD, RMSprop
 from helper import TelegramBot as Bot
-import os
 from keras.layers import LSTM, BatchNormalization, Dense, Dropout, Input, TimeDistributed
 from keras.models import Model
-import random
-import time
-import math
-from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_squared_error
 from helper.DatasetManager import compute_pcc
 
-
 figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/mixed_features/' + \
-               '{min:05}_Mixed_Features_e_{experiment_id}_b{batch_size:03}_d{dropout:02}_fold{n_fold}.png'
+               'Mixed_Features_e_{experiment_id}_b{batch_size:03}_d{dropout:02}_fold{n_fold}.png'
 
 store_weights_file = 'Mixed_features_e_{experiment_id}_b{batch_size:03}_d{dropout:02}.hdf5'
 
+db_path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5'
 
-def model_valence_arousal(batch_size=1, time_step=1, dropout_probability=0.5, summary=False):
+
+def model_valence_arousal(batch_size=1, time_step=1, dropout_probability=0.5, opt=None, summary=False):
     input_features = Input(batch_shape=(batch_size, time_step, 7168,), name='features')
     input_normalized = BatchNormalization(name='normalization')(input_features)
     input_dropout = Dropout(dropout_probability)(input_normalized)
@@ -34,53 +25,59 @@ def model_valence_arousal(batch_size=1, time_step=1, dropout_probability=0.5, su
     output = TimeDistributed(Dense(2, activation='tanh'), name='fc')(output_dropout)
 
     model = Model(input=input_features, output=output)
+    if opt is None:
+        opt = Adam()
+
+    model.compile(loss='mean_squared_error', optimizer=opt)
+    print('Model Compiled!')
 
     if summary:
         model.summary()
     return model
 
 
-def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dropout):
-    mse_valence = np.array([])
-    mse_arousal = np.array([])
-    pcc_valence = np.array([])
-    pcc_arousal = np.array([])
-
-    # Get the model
-    lstm_model = model_valence_arousal(batch_size, timesteps, dropout, True)
-    lstm_model.compile(loss='mean_squared_error', optimizer=optimizer)
-    print('Model Compiled!')
+def get_data(data_split):
 
     # Get data Train, Validation and Test
     movies = Dm.get_movies_names()
-    movies_train = movies[:-2]
-    movies_val = [movies[-2]]
-    movies_test = [movies[-1]]
-    db_path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5'
-    for movie in movies_val:
-        with h5py.File(db_path, 'r') as hdf:
-            labels = np.array(hdf.get('dev/labels/' + movie))
-            features = np.array(hdf.get('dev/features/' + movie))
-        labels_val = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
-        features_val = features.reshape(features.shape[0], 1, features.shape[1])
-    for movie in movies_test:
-        with h5py.File(db_path, 'r') as hdf:
-            labels = np.array(hdf.get('dev/labels/' + movie))
-            features = np.array(hdf.get('dev/features/' + movie))
-        labels_test = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
-        features_test = features.reshape(features.shape[0], 1, features.shape[1])
-    print(labels_val.shape)
-    print(features_val.shape)
-    print(labels_test.shape)
-    print(features_test.shape)
+
+    movies_val = movies[data_split+1]
+    movies_test = movies[data_split]
+    del movies[data_split]
+    del movies[data_split]
+    movies_train = movies
+    print(movies_test)
+    print(movies_val)
+    print(movies_train)
+    with h5py.File(db_path, 'r') as hdf:
+        labels = np.array(hdf.get('dev/labels/' + movies_val))
+        features = np.array(hdf.get('dev/features/' + movies_val))
+    labels_val = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
+    features_val = features.reshape(features.shape[0], 1, features.shape[1])
+    with h5py.File(db_path, 'r') as hdf:
+        labels = np.array(hdf.get('dev/labels/' + movies_test))
+        features = np.array(hdf.get('dev/features/' + movies_test))
+    labels_test = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
+    features_test = features.reshape(features.shape[0], 1, features.shape[1])
+
+    return movies_train, features_val, labels_val, features_test, labels_test
+
+
+def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dropout, data_split):
+
+    # Get the model
+    lstm_model = model_valence_arousal(batch_size, timesteps, dropout, optimizer, True)
+
+    # Get the data
+    movies_train, features_val, labels_val, features_test, labels_test = get_data(data_split)
 
 
     # Start Training
     t_loss = np.array([])
-    v_los = np.array([])
+    v_loss = np.array([])
     train_loss = []
     validation_loss = []
-    for i in range(10):
+    for i in range(30):
         # shuffle movies
         for j, movie in enumerate(movies_train):
             print('Epoch {0}, movie {1}'.format(i, j))
@@ -94,25 +91,34 @@ def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dr
 
             history = lstm_model.fit(features_train,
                                      labels_train,
-                                     batch_size=1,
+                                     batch_size=batch_size,
                                      validation_data=(features_val, labels_val),
-                                     verbose=2,
+                                     verbose=0,
                                      nb_epoch=1,
                                      shuffle=False)
             lstm_model.reset_states()
 
             train_loss.extend(history.history['loss'])
             validation_loss.extend(history.history['val_loss'])
-        t_loss = np.append(t_loss, np.sum(train_loss[-28:])/28)
-        v_los = np.append(v_los, np.sum(validation_loss[-28:])/28)
 
-    minimum_val = np.min(v_los)
+        t_loss = np.append(t_loss, np.mean(train_loss[-28:]))
+        v_loss = np.append(v_loss, np.mean(validation_loss[-28:]))
+        with open("/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/logs/" + str(experiment_id) + ".csv",
+                  "w") as out_file:
+            for i in range(len(train_loss)):
+                out_string = ""
+                out_string += str(train_loss[i])
+                out_string += " " + str(validation_loss[i])
+                out_string += "\n"
+                out_file.write(out_string)
 
-    fig_path = figures_path.format(min=minimum_val, experiment_id=experiment_id, batch_size=batch_size, dropout=dropout,
+
+    fig_path = figures_path.format(experiment_id=experiment_id, batch_size=batch_size, dropout=dropout,
                                    n_fold=1)
-    Bot.save_plots(t_loss, v_los, fig_path)
 
-    predicted = lstm_model.predict(features_test)
+
+    # Predict with de TEST set
+    predicted = lstm_model.predict(features_test, batch_size=1)
 
     # calculate root mean squared error
     valenceMSE = mean_squared_error(predicted[:, 0, 0], labels_test[:, 0, 0])
@@ -132,6 +138,12 @@ def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dr
     scores.append(np.mean(valencePCC))
     scores.append(np.mean(arousalPCC))
 
+    # Store the plot figure
+    Bot.save_plots(t_loss, v_loss, fig_path)
+    json_file = lstm_model.to_json()
+    with open('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/model_{}.json'.format(experiment_id), 'w') as f:
+        f.write(json_file)
+    lstm_model.save_weights('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/weights_{}.json'.format(experiment_id))
     return scores, fig_path
 
 
@@ -150,18 +162,21 @@ def get_optimizer(opt, star_lr):
     return optimizer
 
 
-def train(optimizer, batch_size, timesteps, dropout, starting_lr=1e-3, lr_patience=10, stop_patience=50):
-    optimizer = get_optimizer(optimizer, starting_lr)
+def train(optimizer, batch_size, timesteps, dropout, starting_lr=1e-3, lr_patience=10, stop_patience=50, data_split=1):
 
     start, experiment_id = Bot.start_experiment()
+    print('Experiment: {}'.format(experiment_id))
+    scores, fig_path = train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dropout, data_split)
 
-    scores, fig_path = train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dropout)
-
+    # Create JSON file and XLS with experiment info
     Bot.save_experiment(optimizer, batch_size, timesteps, dropout, 0, starting_lr, lr_patience, stop_patience,
                         'Mixed Features', 1, 512, scores)
 
+    # Send elapsed time and results
     Bot.end_experiment(start, fig_path, scores)
 
 
 if __name__ == '__main__':
-    train('Adam', 1, 1, 0.5, starting_lr=1e-4, lr_patience=0, stop_patience=0)
+    train('Adam', 1, 1, 0.5, starting_lr=1e-3, lr_patience=0, stop_patience=0, data_split=0)
+    train('Adam', 1, 1, 0.5, starting_lr=1e-3, lr_patience=0, stop_patience=0, data_split=1)
+
