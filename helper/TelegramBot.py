@@ -18,14 +18,20 @@ def send_message(message: str):
     bot = telegram.Bot(token='193640162:AAGV3d2H6IAenp3HsdLnuxECL7aLWLGpgmQ')
     updates = bot.getUpdates()
     chat_id = updates[-1].message.chat_id
-    bot.sendMessage(chat_id=chat_id, text=message)
+    try:
+        bot.sendMessage(chat_id=chat_id, text=message)
+    except:
+        pass
 
 
 def send_image(image_path: str):
     bot = telegram.Bot(token='193640162:AAGV3d2H6IAenp3HsdLnuxECL7aLWLGpgmQ')
     updates = bot.getUpdates()
     chat_id = updates[-1].message.chat_id
-    bot.sendPhoto(chat_id=chat_id, photo=open(image_path, 'rb'))
+    try:
+        bot.sendPhoto(chat_id=chat_id, photo=open(image_path, 'rb'))
+    except:
+        pass
 
 
 def send_elapsed_time(elapsed: int):
@@ -36,8 +42,10 @@ def send_elapsed_time(elapsed: int):
         minutes = int((elapsed % 3600) / 60)
     elif elapsed/60 >= 1:
         minutes = int(elapsed / 60)
-    send_message('Elapsed Time: {0:02d}h{1:02d}min'.format(hours, minutes))
-
+    try:
+        send_message('Elapsed Time: {0:02d}h{1:02d}min'.format(hours, minutes))
+    except:
+        pass
 
 def send_results(image_path=None, scores=None):
     if image_path is not None:
