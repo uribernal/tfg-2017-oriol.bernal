@@ -7,7 +7,7 @@ import numpy as np
 
 
 def get_experiments():
-    path = 'experiments.json'
+    path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/logs/experiments.json'
     if os.path.isfile(path):
         with open(path) as data_file:
             data = json.load(data_file)
@@ -34,7 +34,7 @@ def get_elapsed_time(elapsed):
 
 
 class Experiment:
-    'Common base class for all Experiments'
+    """Common base class for all Experiments"""
     json_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/logs/experiments.json'
     xls_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/logs/experiments.xls'
     experiment_id = None
@@ -70,9 +70,9 @@ class Experiment:
         print('Experiment: {}'.format(Experiment.experiment_id))
 
     def save_results(self, scores):
-        Experiment.elapsed = get_elapsed_time(time.time() - Experiment.start )
+        Experiment.elapsed = get_elapsed_time(time.time() - Experiment.start)
         Experiment.scores = scores
-        #Experiment.result2 = result2
+        # Experiment.result2 = result2
 
         # Save Experiment
         Experiment.save_json(self)
@@ -93,8 +93,10 @@ class Experiment:
             'dropout': Experiment.dropout,
             'data_split': Experiment.data_split,
             'num_epochs': Experiment.num_epochs,
-            'MSE': Experiment.scores[0],
-            'PCC': Experiment.scores[1]}
+            'MSE_valence': Experiment.scores[0],
+            'PCC_valence': Experiment.scores[1],
+            'MSE_arousal': Experiment.scores[2],
+            'PCC_arousal': Experiment.scores[3]}
 
         # Update JSON
         s = json.dumps(experiments)
@@ -102,7 +104,8 @@ class Experiment:
             f.write(s)
 
     def save_xls(self):
-        items = ['date', 'elapsed', 'num_epochs', 'lstm_cells', 'optimizer', 'batch_size', 'timesteps', 'dropout', 'data_split', 'MSE', 'PCC']
+        items = ['date', 'elapsed', 'num_epochs', 'lstm_cells', 'optimizer', 'batch_size', 'timesteps', 'dropout',
+                 'data_split', 'MSE_valence', 'MSE_arousal', 'PCC_valence', 'PCC_arousal', ]
         keys = np.arange(get_actual_experiment_id())
 
         # Get experiments
