@@ -47,7 +47,7 @@ def lstm_alberto_tfg_activities(batch_size=32, dropout_probability=.5, summary=F
     output_dropout = Dropout(dropout_probability)(lstm)
     output = TimeDistributed(Dense(1, activation='tanh'), name='fc')(output_dropout)
 
-    model = Model(inputs=input_features, outputs=output)
+    model = Model(input=input_features, output=output)
 
     if summary:
         model.summary()
@@ -66,7 +66,7 @@ def two_layers_lstm(s1=2048, s3=512, batch_size=32, time_steps=1, dropout_probab
     output_dropout3 = Dropout(dropout_probability)(lstm2)
     output = TimeDistributed(Dense(1, activation='tanh'), name='fc')(output_dropout3)
 
-    model = Model(inputs=input_features, outputs=output)
+    model = Model(input=input_features, output=output)
 
     if summary:
         model.summary()
@@ -86,7 +86,7 @@ def three_layers_lstm(s1=2048, s2=1024, s3=512, batch_size=32, time_steps=1, dro
     output_dropout3 = Dropout(dropout_probability)(lstm3)
     output = TimeDistributed(Dense(1, activation='tanh'), name='fc')(output_dropout3)
 
-    model = Model(inputs=input_features, outputs=output)
+    model = Model(input=input_features, output=output)
 
     if summary:
         model.summary()
@@ -118,12 +118,11 @@ def lstm_raw_video(batch_size=32, dropout_probability=.5, summary=False):
     output_dropout = Dropout(dropout_probability)(lstm)
     output = TimeDistributed(Dense(2, activation='tanh'), name='fc')(output_dropout)
 
-    model = Model(inputs=input_features, outputs=output)
+    model = Model(input=input_features, output=output)
 
     if summary:
         model.summary()
     return model
-
 
 
 def lstm_audio_features(batch_size=32, time_steps=1, dropout_probability=.5, summary=False):

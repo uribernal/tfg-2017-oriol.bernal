@@ -3,8 +3,9 @@ This assistant ...
 """
 import numpy as np
 from helper import AudioHelper as Ah
-from keras import backend as K
-K.set_image_dim_ordering('th')
+from helper import VideoHelper as Vh
+from keras import backend as k
+k.set_image_dim_ordering('th')
 
 
 # PATHS
@@ -29,12 +30,13 @@ audios_extension = '.wav'
 
 results_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/results.txt'
 
-def get_video_path(video:str):
-    return  videos_path + video + videos_extension
+
+def get_video_path(video: str):
+    return videos_path + video + videos_extension
 
 
-def get_audio_path(video:str):
-    return  audios_path + video + audios_extension
+def get_audio_path(video: str):
+    return audios_path + video + audios_extension
 
 
 def get_movies_names():
@@ -83,7 +85,7 @@ def get_movie_labels(path: str, movie: str):
     return lab
 
 
-def get_predictions_length(videos: list, show_info: str=False):
+def get_predictions_length(videos: list):
     res = []
     for video in videos:
         l = get_movie_labels(annotations_path, video)  # The ground truth data for each film
@@ -92,11 +94,11 @@ def get_predictions_length(videos: list, show_info: str=False):
     return res
 
 
-def get_ground_truth_data(videos: list, show_info: str=False):
+def get_ground_truth_data(videos: list, show_info=False):
     lab = np.array([])
     for video in videos:
         l = get_movie_labels(annotations_path, video)  # The ground truth data for each film
-        e = l.transpose(1, 0)
+        e = np.transpose(l, (1, 0))
         lab = np.append(lab, e)
         if show_info:
             print('{0}: {1}'.format(video, l.shape))
@@ -106,7 +108,6 @@ def get_ground_truth_data(videos: list, show_info: str=False):
 
 
 def get_videos_info(videos: list):
-    from helper import VideoHelper as Vh
     rgb_frames = []
     video_fps = []
     video_duration = []

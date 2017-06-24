@@ -1,12 +1,7 @@
 import numpy as np
 import h5py
-import os
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
-
-
-movies = ['After_The_Rain', 'Attitude_Matters', 'Barely_legal_stories', 'Between_Viewings', 'Big_Buck_Bunny', 'Chatter', 'Cloudland', 'Damaged_Kung_Fu', 'Decay', 'Elephant_s_Dream', 'First_Bite', 'Full_Service', 'Islands', 'Lesson_Learned', 'Norm', 'Nuclear_Family', 'On_time', 'Origami', 'Parafundit', 'Payload', 'Riding_The_Rails', 'Sintel', 'Spaceman', 'Superhero', 'Tears_of_Steel', 'The_room_of_franz_kafka', 'The_secret_number', 'To_Claire_From_Sonny', 'Wanted', 'You_Again']
-db_path = 'C:/Users/Uri/Desktop/labels.h5'
 
 
 def plot_fear_flow(movie, db_path=None, plot=True, save_path=None):
@@ -47,7 +42,7 @@ def plot_valence_arousal_flow(movie, db_path=None, plot=True, save_path=None):
         plt.close()
 
 
-def plot_fps(videos, videos_path=None, videos_extension= None, plot=True, save_path=None):
+def plot_fps(videos, videos_path=None, videos_extension=None, plot=True, save_path=None):
     from helper.VideoHelper import get_fps
 
     if videos_path is None:
@@ -74,7 +69,7 @@ def plot_fps(videos, videos_path=None, videos_extension= None, plot=True, save_p
         plt.close()
 
 
-def plot_durations(videos, videos_path=None, videos_extension= None, plot=True, save_path=None):
+def plot_durations(videos, videos_path=None, videos_extension=None, plot=True, save_path=None):
     from helper.VideoHelper import get_duration
 
     if videos_path is None:
@@ -144,8 +139,3 @@ def plot_ground_truth_histograms(videos, db_path=None, plot=True, save_path=None
     if save_path is not None:
         plt.savefig(save_path + 'fear_histogram.png')
         plt.close()
-
-db_path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/emotional_impact.h5'
-a = '/home/uribernal/Desktop/output/'
-plot_ground_truth_histograms(movies, db_path=None, plot=False, save_path=a)
-

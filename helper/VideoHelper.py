@@ -108,7 +108,7 @@ def video_to_array(video_path: str, resize=None, start_frame=0, end_frame=None,
 
     video = np.array(frames, dtype=np.float32)
     if dim_ordering == 'th':
-        video = video.transpose(3, 0, 1, 2)
+        video = np.transpose(video, (3, 0, 1, 2))
     return video
 
 
