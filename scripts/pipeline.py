@@ -7,6 +7,7 @@ from scripts.extract_audio_features import extract_audio_features
 from sklearn.metrics import mean_squared_error
 from helper.DatasetManager import compute_pcc
 from helper.DatasetManager import compress_labels
+from keras.models import load_model, model_from_json
 
 
 def get_model(summary=False):
@@ -27,6 +28,7 @@ def get_model(summary=False):
         best_model.summary()
 
     return best_model
+
 
 video_input = '/home/uribernal/Desktop/data/dev/movies/'
 video_30fps_path = '/home/uribernal/Desktop/data/dev/resized_movies/'
@@ -65,8 +67,11 @@ features = features.reshape(features.shape[0], 1, features.shape[1])
 print('Features: {0}\n'.format(features.shape))
 
 # PREDICT
-model = get_model(summary=False)
-predictions = model.predict(features)
+# model = get_model(summary=False)
+# predictions = model.predict(features)
+model = load_model('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/model_0.h5')
+model.load_weights('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/weights_0.h5')
+predictions = model.predict(features[:, :, :4096], batch_size=32)
 print('Predictions: {0}\n'.format(predictions.shape))
 
 # SHOW PREDICTIONS

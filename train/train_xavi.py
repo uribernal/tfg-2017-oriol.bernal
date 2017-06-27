@@ -1,14 +1,14 @@
 import numpy as np
 import h5py
 from helper import DatasetManager as Dm
+from keras.layers import LSTM, Dense, Dropout
 from keras.optimizers import Adam
-from keras.models import Model
+from keras.models import Sequential, Model
 from helper import TelegramBot as Bot
 from sklearn.metrics import mean_squared_error
 from helper.DatasetManager import compute_pcc
 from helper.ExperimentHelper import Experiment
 import time
-from keras.layers import LSTM, BatchNormalization, Dense, Dropout, Input, TimeDistributed
 
 
 np.set_printoptions(threshold=np.NaN)
@@ -21,10 +21,26 @@ db_path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5
 
 
 def get_model(cells=512, bs=1, ts=1, i_dim=4096, dp=0.5, opt=None, lr=1e-8, summary=False):
+    from keras.layers import LSTM, BatchNormalization, Dense, Dropout, Input, TimeDistributed
 
+    '''
+    print('Build STATEFUL model...')
+    model = Sequential()
+    model.add(LSTM(cells, batch_input_shape=(bs, ts, i_dim), return_sequences=False, stateful=True))
+    model.add(Dropout(dp))
+    model.add(Dense(2, activation='tanh'))
+
+    if opt is None:
+        opt = Adam()
+    model.compile(loss='mean_squared_error', optimizer=opt)
+    print('Model Compiled!')
+
+    if summary:
+        model.summary()
+    return model
+    '''
     input_features = Input(batch_shape=(bs, ts, i_dim,), name='features')
-    input_normalized = BatchNormalization(name='normalization')(input_features)
-    input_dropout = Dropout(dp)(input_normalized)
+    input_dropout = Dropout(dp)(input_features)
     lstm = LSTM(cells, return_sequences=True, stateful=True, name='lsmt1')(input_dropout)
     output_dropout = Dropout(dp)(lstm)
     output = TimeDistributed(Dense(2, activation='sigmoid'), name='fc')(output_dropout)
@@ -36,23 +52,6 @@ def get_model(cells=512, bs=1, ts=1, i_dim=4096, dp=0.5, opt=None, lr=1e-8, summ
     model.compile(loss='mean_squared_error', optimizer=opt)
     print('Model Compiled!')
 
-    '''
-        print('Build STATEFUL model...')
-        model = Sequential()
-        model.add(LSTM(cells, batch_input_shape=(bs, ts, i_dim), return_sequences=False, stateful=True))
-        model.add(Dropout(dp))
-        model.add(Dense(2, activation='tanh'))
-
-        if opt is None:
-            opt = Adam()
-        model.compile(loss='mean_squared_error', optimizer=opt)
-        print('Model Compiled!')
-
-        if summary:
-            model.summary()
-        return model
-    '''
-
     if summary:
         model.summary()
     return model
@@ -62,9 +61,7 @@ def get_data(split):
     # Get data Train, Validation and Test
     movies = Dm.get_movies_names()
 
-    movies_val = [movies[split + 1], movies[split + 2], movies[split + 3]]
     movies_test = movies[split]
-    del movies[split]
     del movies[split]
     movies_train = movies
 
@@ -74,7 +71,7 @@ def get_data(split):
     labels_test = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
     features_test = features.reshape(features.shape[0], 1, features.shape[1])[:, :, :4096]
 
-    return movies_train, movies_val, features_test, labels_test
+    return movies_train, features_test, labels_test
 
 
 def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, lr, split):
@@ -86,7 +83,7 @@ def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, 
     model = get_model(cells=cells, bs=bs, ts=ts, dp=dp, opt=opt, lr=lr, summary=True)
 
     # Get the data
-    movies_train, movies_val, x_test, y_test = get_data(split)
+    movies_train, x_test, y_test = get_data(split)
 
     print('Train...')
     training_loss_epochs = []
@@ -100,6 +97,10 @@ def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, 
                 features = np.array(hdf.get('dev/features/' + movie))
                 y_train = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
             x_train = features.reshape(features.shape[0], 1, features.shape[1])[:, :, :4096]
+            a = 8*len(x_train)//10
+            x_train = x_train[:a]
+            y_train = y_train[:a]
+
             for i in range(len(x_train)):
                 x = np.expand_dims(np.expand_dims(x_train[i][0], axis=0), axis=0)
                 y_true = np.array([y_train[i, :, :]])
@@ -108,12 +109,16 @@ def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, 
             model.reset_states()
 
         te_loss_movies = []
-        for movie in movies_val:
+        for movie in movies_train:
             with h5py.File(db_path, 'r') as hdf:
                 labels = np.array(hdf.get('dev/labels/' + movie))
                 features = np.array(hdf.get('dev/features/' + movie))
                 y_val = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
             x_val = features.reshape(features.shape[0], 1, features.shape[1])[:, :, :4096]
+            a = 8 * len(x_val) // 10
+            x_val = x_val[a:]
+            y_val = y_val[a:]
+
             for i in range(len(x_val)):
                 x = np.expand_dims(np.expand_dims(x_val[i][0], axis=0), axis=0)
                 y_true = np.array([y_val[i, :, :]])
@@ -124,11 +129,11 @@ def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, 
         training_loss_epochs = np.append(training_loss_epochs, np.mean(tr_loss_movies))
         test_loss_epochs = np.append(test_loss_epochs, np.mean(te_loss_movies))
 
-        print('epoch = {}, loss training = {}, loss testing = {}, elapsed time = {}'
-              .format(epoch, np.mean(tr_loss_movies), np.mean(te_loss_movies), time.time()-start))
+        print('epoch = {}, loss training = {}, loss testing = {}, elapsed time = {}'.
+              format(epoch, np.mean(tr_loss_movies), np.mean(te_loss_movies), time.time()-start))
         print('___________________________________')
-        Bot.send_message('epoch = {}, loss training = {}, loss testing = {}, elapsed time = {}'
-                         .format(epoch, np.mean(tr_loss_movies), np.mean(te_loss_movies), time.time() - start))
+        Bot.send_message('epoch = {}, loss training = {}, loss testing = {}, elapsed time = {}'.
+                         format(epoch, np.mean(tr_loss_movies), np.mean(te_loss_movies), time.time()-start))
 
     # Save results
     Bot.save_plots(training_loss_epochs, test_loss_epochs, fig_path)
@@ -199,4 +204,18 @@ if __name__ == '__main__':
     timesteps = 1
     dropout = 0.5
     data_split = 0
-    # train(epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, learning_rate, data_split=data_split)
+    # train(epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, data_split=data_split)
+
+    train(40, 2048, None, 1, 1, 0.5, 1e-8, split=0)
+
+    from train.train_video_features_3 import train as train2
+    train2(40, 2048, None, 1, 1, 0.5, 1e-8, split=0)
+    train2(40, 1024, 'Adam', 1, 1, 0.5, 1e-8, split=0)
+    train2(40, 512, 'Adam', 1, 1, 0.5, 1e-8, split=0)
+    train2(40, 256, 'Adam', 1, 1, 0.5, 1e-8, split=0)
+
+    from train.train_mixed_features3 import train as train3
+    train3(40, 2048, None, 1, 1, 0.5, 1e-8, split=0)
+    train3(40, 1024, 'Adam', 1, 1, 0.5, 1e-8, split=0)
+    train3(40, 512, 'Adam', 1, 1, 0.5, 1e-8, split=0)
+    train3(40, 256, 'Adam', 1, 1, 0.5, 1e-8, split=0)

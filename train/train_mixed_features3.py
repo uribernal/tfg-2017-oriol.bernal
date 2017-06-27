@@ -1,6 +1,7 @@
 import numpy as np
 import h5py
 from helper import DatasetManager as Dm
+from keras.layers import LSTM, BatchNormalization, Dense, Dropout, Input, TimeDistributed
 from keras.optimizers import Adam
 from keras.models import Model
 from helper import TelegramBot as Bot
@@ -8,19 +9,18 @@ from sklearn.metrics import mean_squared_error
 from helper.DatasetManager import compute_pcc
 from helper.ExperimentHelper import Experiment
 import time
-from keras.layers import LSTM, BatchNormalization, Dense, Dropout, Input, TimeDistributed
 
 
 np.set_printoptions(threshold=np.NaN)
-figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/video_features/' + \
-               'Video_Features_e_{experiment_id}_b{batch_size:03}_c{cells}.png'
+figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/mixed_features/' + \
+                   'Mixed_Features_e_{experiment_id}_b{batch_size:03}_c{cells}.png'
 
-store_weights_file = 'Video_features_e_{experiment_id}_b{batch_size:03}_c{cells}.hdf5'
+store_weights_file = 'Mixed_features_e_{experiment_id}_b{batch_size:03}_c{cells}.hdf5'
 
 db_path = '/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5'
 
 
-def get_model(cells=512, bs=1, ts=1, i_dim=4096, dp=0.5, opt=None, lr=1e-8, summary=False):
+def get_model(cells=512, bs=1, ts=1, i_dim=7168, dp=0.5, opt=None, lr=1e-8, summary=False):
 
     input_features = Input(batch_shape=(bs, ts, i_dim,), name='features')
     input_normalized = BatchNormalization(name='normalization')(input_features)
@@ -66,13 +66,15 @@ def get_data(split):
     movies_test = movies[split]
     del movies[split]
     del movies[split]
+    del movies[split]
+    del movies[split]
     movies_train = movies
 
     with h5py.File(db_path, 'r') as hdf:
         labels = np.array(hdf.get('dev/labels/' + movies_test))
         features = np.array(hdf.get('dev/features/' + movies_test))
     labels_test = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
-    features_test = features.reshape(features.shape[0], 1, features.shape[1])[:, :, :4096]
+    features_test = features.reshape(features.shape[0], 1, features.shape[1])[:, :, :]
 
     return movies_train, movies_val, features_test, labels_test
 
@@ -99,7 +101,7 @@ def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, 
                 labels = np.array(hdf.get('dev/labels/' + movie))
                 features = np.array(hdf.get('dev/features/' + movie))
                 y_train = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
-            x_train = features.reshape(features.shape[0], 1, features.shape[1])[:, :, :4096]
+            x_train = features.reshape(features.shape[0], 1, features.shape[1])[:, :, :]
             for i in range(len(x_train)):
                 x = np.expand_dims(np.expand_dims(x_train[i][0], axis=0), axis=0)
                 y_true = np.array([y_train[i, :, :]])
@@ -112,8 +114,8 @@ def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, 
             with h5py.File(db_path, 'r') as hdf:
                 labels = np.array(hdf.get('dev/labels/' + movie))
                 features = np.array(hdf.get('dev/features/' + movie))
-                y_val = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
-            x_val = features.reshape(features.shape[0], 1, features.shape[1])[:, :, :4096]
+            y_val = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
+            x_val = features.reshape(features.shape[0], 1, features.shape[1])[:, :, :]
             for i in range(len(x_val)):
                 x = np.expand_dims(np.expand_dims(x_val[i][0], axis=0), axis=0)
                 y_true = np.array([y_val[i, :, :]])
@@ -129,7 +131,6 @@ def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, 
         print('___________________________________')
         Bot.send_message('epoch = {}, loss training = {}, loss testing = {}, elapsed time = {}'
                          .format(epoch, np.mean(tr_loss_movies), np.mean(te_loss_movies), time.time() - start))
-
     # Save results
     Bot.save_plots(training_loss_epochs, test_loss_epochs, fig_path)
     model.save('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/model_{}.h5'.format(
@@ -199,4 +200,6 @@ if __name__ == '__main__':
     timesteps = 1
     dropout = 0.5
     data_split = 0
-    # train(epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, learning_rate, data_split=data_split)
+    # train(epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, data_split=data_split)
+
+    train(20, 2048, None, 1, 1, 0.5, 40, split=0)

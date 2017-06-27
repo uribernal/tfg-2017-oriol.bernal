@@ -37,7 +37,7 @@ def extract_features(audio_name, audio_path=None, audio_extension=None, features
 
         input_audio = audio_path + audio_name + audio_extension
         resized_audio = Ah.get_resized_audio(input_audio, win_frames=win_frames, print_info=False)
-        acoustic_data = Ah.compute_STFT_and_MelBank(resized_audio, num_stft, num_filter_banks, print_info=False)
+        acoustic_data = Ah.compute_stft_and_melbank(resized_audio, num_stft, num_filter_banks, print_info=False)
         print(acoustic_data.shape)
 
     cte = acoustic_data.shape[0]

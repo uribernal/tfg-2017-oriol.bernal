@@ -49,8 +49,9 @@ class Experiment:
     data_split = None
     num_epochs = None
     scores = None
+    learning_rate = None
 
-    def __init__(self, num_epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, data_split):
+    def __init__(self, num_epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, learning_rate, data_split):
         # Get last experiment
         Experiment.experiment_id = get_actual_experiment_id()
 
@@ -66,6 +67,7 @@ class Experiment:
         Experiment.dropout = dropout
         Experiment.data_split = data_split
         Experiment.num_epochs = num_epochs
+        Experiment.learning_rate = learning_rate
 
         print('Experiment: {}'.format(Experiment.experiment_id))
 
@@ -91,6 +93,7 @@ class Experiment:
             'batch_size': Experiment.batch_size,
             'timesteps': Experiment.timesteps,
             'dropout': Experiment.dropout,
+            'lr': Experiment.learning_rate,
             'data_split': Experiment.data_split,
             'num_epochs': Experiment.num_epochs,
             'MSE_valence': Experiment.scores[0],
@@ -105,7 +108,7 @@ class Experiment:
 
     def save_xls(self):
         items = ['date', 'elapsed', 'num_epochs', 'lstm_cells', 'optimizer', 'batch_size', 'timesteps', 'dropout',
-                 'data_split', 'MSE_valence', 'MSE_arousal', 'PCC_valence', 'PCC_arousal', ]
+                 'lr', 'data_split', 'MSE_valence', 'MSE_arousal', 'PCC_valence', 'PCC_arousal', ]
         keys = np.arange(get_actual_experiment_id())
 
         # Get experiments
