@@ -2,7 +2,7 @@
 
 A joint collaboration between:
 
-| ![logo-insight] | ![logo-dcu] | ![logo-upc] | ![logo-etsetb] | ![logo-gpi] | 
+| ![logo-upc] | ![logo-etsetb] | ![logo-gpi] | ![logo-tu-wien] | ![logo-computer-science-wien] | 
 |:-:|:-:|:-:|:-:|:-:|
 | [Insight Centre for Data Analytics][insight-web] | [Dublin City University (DCU)][dcu-web]  |[Universitat Politecnica de Catalunya (UPC)][upc-web]   | [UPC ETSETB TelecomBCN][etsetb-web]  | [UPC Image Processing Group][gpi-web] | 
 
@@ -19,8 +19,8 @@ A joint collaboration between:
 [logo-upc]: https://raw.githubusercontent.com/imatge-upc/saliency-2016-cvpr/master/logos/upc.jpg "Universitat Politecnica de Catalunya"
 [logo-etsetb]: https://raw.githubusercontent.com/imatge-upc/saliency-2016-cvpr/master/logos/etsetb.png "ETSETB TelecomBCN"
 [logo-gpi]: https://raw.githubusercontent.com/imatge-upc/saliency-2016-cvpr/master/logos/gpi.png "UPC Image Processing Group"
-[tu-wien]: https://www.tuwien.ac.at/fileadmin/t/tuwien/downloads/cd/CD_2015/TU_logo.jpg "TU Wien"
-[computer-science-wien]: https://www.fsinf.at/files/fak_Logo.png
+[logo-tu-wien]: https://www.tuwien.ac.at/fileadmin/t/tuwien/downloads/cd/CD_2015/TU_logo.jpg "TU Wien"
+[logo-computer-science-wien]: https://www.fsinf.at/files/fak_Logo.png
 
 
 This Thesis explores different approaches using deep learning techniques to predict emotions in videos.
