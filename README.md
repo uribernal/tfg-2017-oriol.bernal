@@ -43,9 +43,9 @@ Several architectures and different parameters have been tested in order to achi
 | Main pipeline of the project |  
 |:-:|
 |  ![pipeline] | 
-| [Pipeline](https://imatge.upc.edu/web/sites/default/files/resources/1720/saliency/2016-cvpr/shallow_net.pickle)  | 
+| [Pipeline](https://github.com/uribernal/tfg-2017-oriol.bernal/blob/master/docs/images/pipeline.png?raw=true)  | 
 
-[pipeline]: https://raw.githubusercontent.com/imatge-upc/saliency-2016-cvpr/master/figs/shallow.png "Shallow convnet architecture"
+[pipeline]: https://github.com/uribernal/tfg-2017-oriol.bernal/blob/master/docs/images/pipeline.png?raw=true "pipeline of the project"
 
 
 
