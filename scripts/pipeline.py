@@ -53,7 +53,7 @@ if False:
 # EXTRACT VIDEO FEATURES
 video_features = extract_video_features(video_name, video_30fps_path)
 with h5py.File('/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5', 'r') as hdf:
-    y_test = np.array(hdf.get('dev/labels/On_time'))
+    y_test = np.array(hdf.get('dev/labels/' + video_name))
 print('Video features: {0}\n'.format(video_features.shape))
 print('Labels: {0}\n'.format(y_test.shape))
 
@@ -69,9 +69,9 @@ print('Features: {0}\n'.format(features.shape))
 # PREDICT
 # model = get_model(summary=False)
 # predictions = model.predict(features)
-model = load_model('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/model_0.h5')
-model.load_weights('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/weights_0.h5')
-predictions = model.predict(features[:, :, :4096], batch_size=32)
+model = load_model('/home/uribernal/Desktop/model_1.3.h5')
+model.load_weights('/home/uribernal/Desktop/weights_1.3.h5')
+predictions = model.predict(features[:, :, :4096], batch_size=1)
 print('Predictions: {0}\n'.format(predictions.shape))
 
 # SHOW PREDICTIONS

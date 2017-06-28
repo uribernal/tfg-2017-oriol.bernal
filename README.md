@@ -1,5 +1,28 @@
 # EMOTIONAL IMPACT OF MOVIES
 
+A joint collaboration between:
+
+| ![logo-insight] | ![logo-dcu] | ![logo-upc] | ![logo-etsetb] | ![logo-gpi] | 
+|:-:|:-:|:-:|:-:|:-:|
+| [Insight Centre for Data Analytics][insight-web] | [Dublin City University (DCU)][dcu-web]  |[Universitat Politecnica de Catalunya (UPC)][upc-web]   | [UPC ETSETB TelecomBCN][etsetb-web]  | [UPC Image Processing Group][gpi-web] | 
+
+
+
+[upc-web]: http://www.upc.edu/?set_language=en 
+[etsetb-web]: https://www.etsetb.upc.edu/en/ 
+[gpi-web]: https://imatge.upc.edu/web/ 
+[tu-wien]: https://www.tuwien.ac.at/en/
+[computer-science-wien]: http://www.informatik.tuwien.ac.at/english
+
+
+
+[logo-upc]: https://raw.githubusercontent.com/imatge-upc/saliency-2016-cvpr/master/logos/upc.jpg "Universitat Politecnica de Catalunya"
+[logo-etsetb]: https://raw.githubusercontent.com/imatge-upc/saliency-2016-cvpr/master/logos/etsetb.png "ETSETB TelecomBCN"
+[logo-gpi]: https://raw.githubusercontent.com/imatge-upc/saliency-2016-cvpr/master/logos/gpi.png "UPC Image Processing Group"
+[tu-wien]: https://www.tuwien.ac.at/fileadmin/t/tuwien/downloads/cd/CD_2015/TU_logo.jpg "TU Wien"
+[computer-science-wien]: https://www.fsinf.at/files/fak_Logo.png
+
+
 This Thesis explores different approaches using deep learning techniques to predict emotions in videos.
 
 Working with videos implies a huge amount of data including visual frames and acoustic samples. The first step of the project is basically to extract features to represent the videos in small sets of arrays. This procedure is done using pretrained models based on Convolutional Networks, the state of the art in visual recognition. Firstly, visual features are extracted using 3D convolutions and acoustic features are extracted using VGG19, a pretrained convolutional model for images fine-tuned to accept the audio inputs.
@@ -9,6 +32,8 @@ Later, these features are fed into Recurrent models that exploit the temporal in
 Emotions are measured in terms of valence and arousal, values between [-1, 1]. Additionally, the same techniques are also used to attempt to predict fear scenes. In consequence, this thesis deals with both regression and classification problems.
 
 Several architectures and different parameters have been tested in order to achieve the best performance. Finally, the results will be published in the MediaEval 2017 Challenge and compared to the state-of-the-art solutions.
+
+
 
 ## Getting Started
 
