@@ -1,4 +1,4 @@
-# EMOTIONAL IMPACT OF MOVIES
+# Predicting emotion in movies: Recurrent and convolutional models applied to videos
 
 A joint collaboration between:
 
@@ -22,6 +22,7 @@ A joint collaboration between:
 [logo-tu-wien]: https://www.tuwien.ac.at/fileadmin/t/tuwien/downloads/cd/CD_NEU_2009/TU_Logos_2009/TU-Signet.png "TU Wien"
 [logo-computer-science-wien]: https://www.fsinf.at/files/fak_Logo.png
 
+## Abstract
 
 This Thesis explores different approaches using deep learning techniques to predict emotions in videos.
 
@@ -37,7 +38,16 @@ Several architectures and different parameters have been tested in order to achi
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+## Pipeline
+
+| Main pipeline of the project |  
+|:-:|
+|  ![pipeline] | 
+| [Pipeline](https://imatge.upc.edu/web/sites/default/files/resources/1720/saliency/2016-cvpr/shallow_net.pickle)  | 
+
+[pipeline]: https://raw.githubusercontent.com/imatge-upc/saliency-2016-cvpr/master/figs/shallow.png "Shallow convnet architecture"
+
+
 
 ### Prerequisites
 
