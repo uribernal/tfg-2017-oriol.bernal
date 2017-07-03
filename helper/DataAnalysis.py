@@ -15,11 +15,14 @@ def plot_fear_flow(movie, db_path=None, plot=True, save_path=None):
     fig.suptitle(movie, fontsize=14, fontweight='bold')
     x = np.arange(labels.shape[0])*5
     plt.plot(x, labels[:, 2], label='valence')
+    plt.xlabel('time')
+    plt.ylabel('classes')
+    if save_path is not None:
+        plt.savefig(save_path + movie + '_fear-flow.png')
+        plt.close()
+
     if plot:
         plt.show()
-    if save_path is not None:
-        plt.savefig(save_path+movie)
-        plt.close()
 
 
 def plot_valence_arousal_flow(movie, db_path=None, plot=True, save_path=None):
@@ -34,12 +37,15 @@ def plot_valence_arousal_flow(movie, db_path=None, plot=True, save_path=None):
     x = np.arange(labels.shape[0])*5
     plt.plot(x, labels[:, 0], label='valence')
     plt.plot(x, labels[:, 1], label='arousal')
+    plt.xlabel('time')
+    plt.ylabel('scores')
     plt.legend(loc='upper right')
+    if save_path is not None:
+        plt.savefig(save_path + movie + '_valence-arousal-flow.png')
+        plt.close()
+
     if plot:
         plt.show()
-    if save_path is not None:
-        plt.savefig(save_path+movie)
-        plt.close()
 
 
 def plot_fps(videos, videos_path=None, videos_extension=None, plot=True, save_path=None):
@@ -83,7 +89,7 @@ def plot_durations(videos, videos_path=None, videos_extension=None, plot=True, s
         duration.append(get_duration(path))
 
     fig = plt.figure(0)
-    fig.suptitle('FPS of the DB', fontsize=14, fontweight='bold')
+    fig.suptitle('Duration of the DB', fontsize=14, fontweight='bold')
     x = np.arange(len(duration))
     plt.bar(x, duration)
     plt.xlabel('movies')

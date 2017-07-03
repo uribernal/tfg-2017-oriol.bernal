@@ -28,7 +28,7 @@ def model_valence_arousal(batch_size=1, time_step=1, dropout_probability=0.5, op
     if opt is None:
         opt = Adam()
 
-    model.compile(loss='mean_squared_error', optimizer=opt)
+    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
     print('Model Compiled!')
 
     if summary:
@@ -52,12 +52,12 @@ def get_data(data_split):
     with h5py.File(db_path, 'r') as hdf:
         labels = np.array(hdf.get('dev/labels/' + movies_val))
         features = np.array(hdf.get('dev/features/' + movies_val))
-    labels_val = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
+    labels_val = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, -1].reshape(labels.shape[0], 1, 1)
     features_val = features.reshape(features.shape[0], 1, features.shape[1])
     with h5py.File(db_path, 'r') as hdf:
         labels = np.array(hdf.get('dev/labels/' + movies_test))
         features = np.array(hdf.get('dev/features/' + movies_test))
-    labels_test = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
+    labels_test = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, -1].reshape(labels.shape[0], 1, 1)
     features_test = features.reshape(features.shape[0], 1, features.shape[1])
 
     return movies_train, features_val, labels_val, features_test, labels_test
@@ -77,7 +77,12 @@ def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dr
     v_loss = np.array([])
     train_loss = []
     validation_loss = []
-    for i in range(30):
+
+    t_acc = np.array([])
+    v_acc = np.array([])
+    train_acc = []
+    validation_acc = []
+    for i in range(10):
         # shuffle movies
         for j, movie in enumerate(movies_train):
             print('Epoch {0}, movie {1}'.format(i, j))
@@ -86,36 +91,30 @@ def train_and_evaluate_model(experiment_id, optimizer, batch_size, timesteps, dr
             with h5py.File(db_path, 'r') as hdf:
                 labels = np.array(hdf.get('dev/labels/' + movie))
                 features = np.array(hdf.get('dev/features/' + movie))
-            labels_train = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, :2]
+            labels_train = labels.reshape(labels.shape[0], 1, labels.shape[1])[:, :, -1].reshape(labels.shape[0], 1, 1)
             features_train = features.reshape(features.shape[0], 1, features.shape[1])
 
             history = lstm_model.fit(features_train,
                                      labels_train,
                                      batch_size=batch_size,
                                      validation_data=(features_val, labels_val),
-                                     verbose=0,
+                                     verbose=2,
                                      nb_epoch=1,
                                      shuffle=False)
             lstm_model.reset_states()
 
             train_loss.extend(history.history['loss'])
             validation_loss.extend(history.history['val_loss'])
+            train_acc.extend(history.history['acc'])
+            validation_acc.extend(history.history['val_acc'])
 
         t_loss = np.append(t_loss, np.mean(train_loss[-28:]))
         v_loss = np.append(v_loss, np.mean(validation_loss[-28:]))
-        with open("/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/logs/" + str(experiment_id) + ".csv",
-                  "w") as out_file:
-            for i in range(len(train_loss)):
-                out_string = ""
-                out_string += str(train_loss[i])
-                out_string += " " + str(validation_loss[i])
-                out_string += "\n"
-                out_file.write(out_string)
-
+        t_acc = np.append(t_acc, np.mean(train_acc[-28:]))
+        v_acc = np.append(v_acc, np.mean(validation_acc[-28:]))
 
     fig_path = figures_path.format(experiment_id=experiment_id, batch_size=batch_size, dropout=dropout,
                                    n_fold=1)
-
 
     # Predict with de TEST set
     predicted = lstm_model.predict(features_test, batch_size=1)
@@ -178,5 +177,4 @@ def train(optimizer, batch_size, timesteps, dropout, starting_lr=1e-3, lr_patien
 
 if __name__ == '__main__':
     train('Adam', 1, 1, 0.5, starting_lr=1e-3, lr_patience=0, stop_patience=0, data_split=0)
-    train('Adam', 1, 1, 0.5, starting_lr=1e-3, lr_patience=0, stop_patience=0, data_split=1)
 

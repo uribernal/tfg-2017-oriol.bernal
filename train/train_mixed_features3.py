@@ -201,5 +201,10 @@ if __name__ == '__main__':
     dropout = 0.5
     data_split = 0
     # train(epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, data_split=data_split)
+    train(25, 256, None, 1, 1, 0.5, 1e-9, split=0)
+    train(25, 256, None, 1, 1, 0.5, 1e-8, split=0)
+    train(25, 256, None, 1, 1, 0.5, 1e-7, split=0)
 
-    train(20, 2048, None, 1, 1, 0.5, 40, split=0)
+    train(25, 2048, None, 1, 1, 0.5, 1e-9, split=0)
+    train(25, 1024, None, 1, 1, 0.5, 1e-9, split=0)
+    train(25, 512, None, 1, 1, 0.5, 1e-9, split=0)

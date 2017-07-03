@@ -38,12 +38,10 @@ Several architectures and different parameters have been tested in order to achi
 
 ## Getting Started
 
-## Pipeline
-
 | Main pipeline of the project |  
 |:-:|
 |  ![pipeline] | 
-| [Pipeline](https://github.com/uribernal/tfg-2017-oriol.bernal/blob/master/docs/images/pipeline.png?raw=true)  | 
+| [Pipeline](https://github.com/uribernal/tfg-2017-oriol.bernal/blob/master/scripts/pipeline.py)  | 
 
 [pipeline]: https://github.com/uribernal/tfg-2017-oriol.bernal/blob/master/docs/images/pipeline.png?raw=true "pipeline of the project"
 

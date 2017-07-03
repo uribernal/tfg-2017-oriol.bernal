@@ -18,20 +18,16 @@ def send_message(message: str):
     bot = telegram.Bot(token='193640162:AAGV3d2H6IAenp3HsdLnuxECL7aLWLGpgmQ')
     updates = bot.getUpdates()
     chat_id = updates[-1].message.chat_id
-    try:
-        bot.sendMessage(chat_id=chat_id, text=message)
-    except:
-        pass
+
+    bot.sendMessage(chat_id=chat_id, text=message)
 
 
 def send_image(image_path: str):
     bot = telegram.Bot(token='193640162:AAGV3d2H6IAenp3HsdLnuxECL7aLWLGpgmQ')
     updates = bot.getUpdates()
     chat_id = updates[-1].message.chat_id
-    try:
-        bot.sendPhoto(chat_id=chat_id, photo=open(image_path, 'rb'))
-    except:
-        pass
+
+    bot.sendPhoto(chat_id=chat_id, photo=open(image_path, 'rb'))
 
 
 def send_elapsed_time(elapsed: int):
@@ -42,10 +38,9 @@ def send_elapsed_time(elapsed: int):
         minutes = int((elapsed % 3600) / 60)
     elif elapsed/60 >= 1:
         minutes = int(elapsed / 60)
-    try:
-        send_message('Elapsed Time: {0:02d}h{1:02d}min'.format(hours, minutes))
-    except:
-        pass
+
+    send_message('Elapsed Time: {0:02d}h{1:02d}min'.format(hours, minutes))
+
 
 def send_results(image_path=None, scores=None):
     if image_path is not None:
@@ -89,7 +84,8 @@ def get_experiments():
     return data
 
 
-def save_experiment(optimizer, batchsize, timesteps, dropout, n_folds, lr, p1, p2, input_features, layers, cells, scores):
+def save_experiment(optimizer, batchsize, timesteps, dropout, n_folds, lr, p1, p2,
+                    input_features, layers, cells, scores):
     # Compute date
     date = datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
 
@@ -159,5 +155,3 @@ def end_experiment(start, image_path, scores):
     end = time.time()
     send_elapsed_time(end-start)
     send_results(image_path, scores)
-
-
