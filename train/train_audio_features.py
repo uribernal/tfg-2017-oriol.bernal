@@ -1,6 +1,5 @@
 import numpy as np
 import h5py
-from helper import DatasetManager as Db
 from helper import ModelGenerator as Mg
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from keras.optimizers import Adam
@@ -12,7 +11,7 @@ def train_model(model, experiment_id, dropout_probability, batch_size):
     data_path = '/home/uribernal/Desktop/MediaEval2017/data/data/emotional_impact.h5'
 
     # Path for the figures
-    figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/audio_features/'+\
+    figures_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/figures/audio_features/' + \
                    '{min:05}_Audio_Features_e_{experiment_id}_b{batch_size:03}_d{drop_out:02}.png'
 
     # Path for the weights
@@ -96,10 +95,9 @@ def train_model(model, experiment_id, dropout_probability, batch_size):
 
     print('Reseting model states')
     model.reset_states()
-    Bot.save_plots(train_loss, validation_loss, figures_path.format(min=min, experiment_id=experiment_id,
-                                                                batch_size=batch_size, drop_out=dropout_probability))
+    Bot.save_plots(train_loss, validation_loss, figures_path.format(
+        min=min, experiment_id=experiment_id, batch_size=batch_size, drop_out=dropout_probability))
     return min
-
 
 
 if __name__ == "__main__":
@@ -125,4 +123,3 @@ if __name__ == "__main__":
         Bot.send_image(image_path)
         Bot.send_elapsed_time(end - start)
     Bot.send_message('Finished')
-

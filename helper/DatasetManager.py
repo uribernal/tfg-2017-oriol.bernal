@@ -1,6 +1,8 @@
 """
-This assistant ...
+This assistant gives information about the DB, such as the number of videos, the video list,
+the paths, and many other features
 """
+
 import numpy as np
 from helper import AudioHelper as Ah
 from helper import VideoHelper as Vh
@@ -51,6 +53,8 @@ def get_movies_names():
 
 
 def get_movie_labels(path: str, movie: str):
+    """ Returns the ground truth data for a given movie """
+
     extensions = ['-MEDIAEVAL2017-valence_arousal.txt', '-MEDIAEVAL2017-fear.txt']
     time_1 = []
     mean_arousal = []
@@ -149,6 +153,10 @@ def compute_pcc(y_pred, y_true):
 
 
 def expand_labels(labels):
+    """ Expand the array labels.
+    Input array array: each sample is 10 seconds of the video with 5 seconds of shifting
+    Output array: each sample is 0,5333 seconds of the video
+    """
     a1 = np.ones(9)
     a2 = np.ones(10)
     new_array = a1 * labels[0]
@@ -170,6 +178,10 @@ def expand_labels(labels):
 
 
 def compress_labels(labels):
+    """ Compress the array labels.
+    Input array: each sample is 0,5333 seconds of the video
+    Output array array: each sample is 10 seconds of the video with 5 seconds of shifting
+    """
     a1 = 9
     a2 = 10
 

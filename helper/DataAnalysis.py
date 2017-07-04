@@ -1,3 +1,7 @@
+"""
+This assistant allows to compute some features of the database.
+"""
+
 import numpy as np
 import h5py
 import matplotlib.pyplot as plt
@@ -5,6 +9,11 @@ import matplotlib.mlab as mlab
 
 
 def plot_fear_flow(movie, db_path=None, plot=True, save_path=None):
+    """ Shows the fear values of a film (0 or 1 values)
+    Example: plots for all the videos in the developing set (30 videos):
+        docs / images / fear_flow.png
+    """
+
     if db_path is None:
         from helper.DatasetManager import data_path as db_path
 
@@ -26,6 +35,10 @@ def plot_fear_flow(movie, db_path=None, plot=True, save_path=None):
 
 
 def plot_valence_arousal_flow(movie, db_path=None, plot=True, save_path=None):
+    """ Shows the valence and arousal continuous values of a film
+    Example: plots for all the videos in the developing set (30 videos):
+        docs / images / valence_and_arousal_flow.png
+    """
     if db_path is None:
         from helper.DatasetManager import data_path as db_path
 
@@ -49,6 +62,10 @@ def plot_valence_arousal_flow(movie, db_path=None, plot=True, save_path=None):
 
 
 def plot_fps(videos, videos_path=None, videos_extension=None, plot=True, save_path=None):
+    """ Shows the frames per second of every video in the list: videos
+    Example: plots for all the videos in the developing set (30 videos):
+        docs / images / fps.png
+        """
     from helper.VideoHelper import get_fps
 
     if videos_path is None:
@@ -76,6 +93,10 @@ def plot_fps(videos, videos_path=None, videos_extension=None, plot=True, save_pa
 
 
 def plot_durations(videos, videos_path=None, videos_extension=None, plot=True, save_path=None):
+    """ Shows the duration of every video in the list: videos
+    Example: plots for all the videos in the developing set (30 videos):
+        docs / images / duration.png
+        """
     from helper.VideoHelper import get_duration
 
     if videos_path is None:
@@ -102,6 +123,13 @@ def plot_durations(videos, videos_path=None, videos_extension=None, plot=True, s
 
 
 def plot_ground_truth_histograms(videos, db_path=None, plot=True, save_path=None):
+    """ Shows the histogram values (valence, arousal and fear) of every video in the list: videos
+    Examples: plots for all the videos in the developing set (30 videos):
+    docs/images/arousal_histogram.png
+    docs/images/valence_histogram.png
+    docs/images/fear_histogram.png
+    """
+
     if db_path is None:
         from helper.DatasetManager import data_path as db_path
 

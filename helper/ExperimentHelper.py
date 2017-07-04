@@ -1,3 +1,9 @@
+"""
+This assistant allows to keep an order to all the experiments (Experiment Storer and Counter).
+It works with a json file where all the experiments are stored. It also writes an excel file
+for better visualization of the experiments carried out
+"""
+
 import os
 import json
 import datetime
@@ -7,6 +13,8 @@ import numpy as np
 
 
 def get_experiments():
+    """ Returns the json file with all the experimets """
+
     path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/logs/experiments.json'
     if os.path.isfile(path):
         with open(path) as data_file:
@@ -18,11 +26,15 @@ def get_experiments():
 
 
 def get_actual_experiment_id():
+    """ Returns the next experiment number (experiment_id). """
+
     experiments = get_experiments()
     return len(experiments.keys())
 
 
 def get_elapsed_time(elapsed):
+    """ Returns a given time in seconds in hours and minutes """
+
     hours = 0
     minutes = 0
     if elapsed / 3600 >= 1:
@@ -34,7 +46,7 @@ def get_elapsed_time(elapsed):
 
 
 class Experiment:
-    """Common base class for all Experiments"""
+    """ Common base class for all Experiments """
     json_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/logs/experiments.json'
     xls_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/logs/experiments.xls'
     experiment_id = None
@@ -52,14 +64,18 @@ class Experiment:
     learning_rate = None
 
     def __init__(self, num_epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, learning_rate, data_split):
-        # Get last experiment
+        """ Creates the next experiment with its parameters """
+
+        # Get next experiment
         Experiment.experiment_id = get_actual_experiment_id()
 
         # Compute date
         Experiment.date = datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
 
+        # Start time for the experiment
         Experiment.start = time.time()
 
+        # Save parameters for the experiment
         Experiment.lstm_cells = lstm_cells
         Experiment.optimizer = optimizer
         Experiment.batch_size = batch_size
@@ -72,15 +88,21 @@ class Experiment:
         print('Experiment: {}'.format(Experiment.experiment_id))
 
     def save_results(self, scores):
+        """ Store the results and save the experiment """
+
+        # Save elapsed time for the experiment
         Experiment.elapsed = get_elapsed_time(time.time() - Experiment.start)
+
+        # Save results for the experiment
         Experiment.scores = scores
-        # Experiment.result2 = result2
 
         # Save Experiment
         Experiment.save_json(self)
         Experiment.save_xls(self)
 
     def save_json(self):
+        """ Update JSON file of all the experiments """
+
         # Get experiments
         experiments = get_experiments()
 
@@ -107,6 +129,8 @@ class Experiment:
             f.write(s)
 
     def save_xls(self):
+        """ Update XLS file of all the experiments """
+
         items = ['date', 'elapsed', 'num_epochs', 'lstm_cells', 'optimizer', 'batch_size', 'timesteps', 'dropout',
                  'lr', 'data_split', 'MSE_valence', 'MSE_arousal', 'PCC_valence', 'PCC_arousal', ]
         keys = np.arange(get_actual_experiment_id())
