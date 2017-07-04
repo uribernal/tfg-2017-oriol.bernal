@@ -206,3 +206,25 @@ def compress_labels(labels):
     a = labels[-1]
     new_array = np.append(new_array, a)
     return new_array
+
+
+def save_plots(train_loss, validation_loss, path):
+    """ Stores the plots from the trainings in the given path """
+
+    # Show plots
+    x = np.arange(len(validation_loss))
+    fig = plt.figure(1)
+    fig.suptitle('LOSS', fontsize=14, fontweight='bold')
+
+    # LOSS: TRAINING vs VALIDATION
+    plt.plot(x, train_loss, '--', linewidth=2, label='train')
+    plt.plot(x, validation_loss, label='validation')
+    plt.legend(loc='upper right')
+
+    # MIN
+    val, idx = min((val, idx) for (idx, val) in enumerate(validation_loss))
+    plt.annotate(str(val), xy=(idx, val), xytext=(idx, val - 0.01),
+                 arrowprops=dict(facecolor='black', shrink=0.0005))
+
+    plt.savefig(path, dpi=fig.dpi)
+    plt.close()

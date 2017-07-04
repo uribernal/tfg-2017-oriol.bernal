@@ -116,7 +116,7 @@ def train_model(model, experiment_id, dropout_probability, batch_size):
 
     print('Reseting model states')
     model.reset_states()
-    Bot.save_plots(train_loss, validation_loss, figures_path.format(min=min, experiment_id=experiment_id,
+    Dm.save_plots(train_loss, validation_loss, figures_path.format(min=min, experiment_id=experiment_id,
                                                                 batch_size=batch_size, drop_out=dropout_probability))
     return min
 

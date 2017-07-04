@@ -1,6 +1,7 @@
 import numpy as np
 import h5py
 from helper import ModelGenerator as Mg
+from helper import DatasetManager as Dm
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from keras.optimizers import Adam
 from helper import TelegramBot as Bot
@@ -95,7 +96,7 @@ def train_model(model, experiment_id, dropout_probability, batch_size):
 
     print('Reseting model states')
     model.reset_states()
-    Bot.save_plots(train_loss, validation_loss, figures_path.format(
+    Dm.save_plots(train_loss, validation_loss, figures_path.format(
         min=min, experiment_id=experiment_id, batch_size=batch_size, drop_out=dropout_probability))
     return min
 

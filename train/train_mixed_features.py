@@ -145,7 +145,7 @@ def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, 
         Bot.send_message('epoch = {}, loss training = {}, loss testing = {}, elapsed time = {}'
                          .format(epoch, np.mean(tr_loss_movies), np.mean(val_loss_movies), time.time() - start))
     # Save results
-    Bot.save_plots(training_loss_epochs, test_loss_epochs, fig_path)
+    Dm.save_plots(training_loss_epochs, test_loss_epochs, fig_path)
     model.save('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/model_{}.h5'.format(
                 experiment_id))
     json_file = model.to_json()
