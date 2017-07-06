@@ -7,6 +7,7 @@ import numpy as np
 from helper import AudioHelper as Ah
 from helper import VideoHelper as Vh
 from keras import backend as k
+import matplotlib.pyplot as plt
 k.set_image_dim_ordering('th')
 
 

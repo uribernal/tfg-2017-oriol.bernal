@@ -281,4 +281,4 @@ if __name__ == '__main__':
     data_split = 0
 
     # train(epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, data_split=data_split)
-    train(100, 1024, None, 1, 1, 0.5, 1e-5, split=0)
+    train(50, 1024, None, 1, 1, 0.5, 1e-5, split=0)
