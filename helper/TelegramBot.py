@@ -5,8 +5,6 @@ to mobile phones.
 """
 
 import telegram
-import numpy as np
-import matplotlib.pyplot as plt
 
 
 def send_message(message: str):
