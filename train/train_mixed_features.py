@@ -8,6 +8,7 @@ from helper import TelegramBot as Bot
 from sklearn.metrics import mean_squared_error
 from helper.DatasetManager import compute_pcc
 from helper.ExperimentHelper import Experiment
+from helper.DatasetManager import compress_labels
 import time
 
 
@@ -185,11 +186,6 @@ def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, 
     # Save model (physical structure)
     model.save(model_path.format(experiment_id))
 
-    # Save JSON model
-    json_file = model.to_json()
-    with open(model_path.format(experiment_id), 'w') as f:
-        f.write(json_file)
-
     # Save weights
     model.save_weights(weights_path.format(
                 experiment_id))
@@ -218,30 +214,17 @@ def train_and_evaluate_model(experiment_id, num_epochs, cells, opt, bs, ts, dp, 
         print(predicted)
 
         # Print MSE and PCC scores
-        if len(predicted.shape) < 3:
-            # calculate root mean squared error
-            valence_mse = np.concatenate(valence_mse, mean_squared_error(predicted[:, 0], y_test[:, 0, 0]))
-            print('Valence MSE = {0}\n'.format(valence_mse))
-            arousal_mse = np.concatenate(arousal_mse, mean_squared_error(predicted[:, 1], y_test[:, 0, 1]))
-            print('Arousal MSE = {0}\n'.format(arousal_mse))
+        # calculate root mean squared error
+        valence_mse = np.append(valence_mse, mean_squared_error(compress_labels(predicted[:, 0, 0]), compress_labels(y_test[:, 0, 0])))
+        print('Valence MSE = {0}\n'.format(valence_mse))
+        arousal_mse = np.append(arousal_mse, mean_squared_error(compress_labels(predicted[:, 0, 1]), compress_labels(y_test[:, 0, 1])))
+        print('Arousal MSE = {0}\n'.format(arousal_mse))
 
-            # calculate PCC
-            valence_pcc = np.append(valence_pcc, compute_pcc(predicted[:, 0], y_test[:, 0, 0]))
-            print('Valence PCC = {0}\n'.format(valence_pcc))
-            arousal_pcc = np.append(arousal_pcc, compute_pcc(predicted[:, 1], y_test[:, 0, 1]))
-            print('Arousal PCC = {0}\n'.format(arousal_pcc))
-        else:
-            # calculate root mean squared error
-            valence_mse = np.append(valence_mse, mean_squared_error(predicted[:, 0, 0], y_test[:, 0, 0]))
-            print('Valence MSE = {0}\n'.format(valence_mse))
-            arousal_mse = np.append(arousal_mse, mean_squared_error(predicted[:, 0, 1], y_test[:, 0, 1]))
-            print('Arousal MSE = {0}\n'.format(arousal_mse))
-
-            # calculate PCC
-            valence_pcc = np.append(valence_pcc, compute_pcc(predicted[:, 0, 0], y_test[:, 0, 0]))
-            print('Valence PCC = {0}\n'.format(valence_pcc))
-            arousal_pcc = np.append(arousal_pcc, compute_pcc(predicted[:, 0, 1], y_test[:, 0, 1]))
-            print('Arousal PCC = {0}\n'.format(arousal_pcc))
+        # calculate PCC
+        valence_pcc = np.append(valence_pcc, compute_pcc(compress_labels(predicted[:, 0, 0]), compress_labels(y_test[:, 0, 0])))
+        print('Valence PCC = {0}\n'.format(valence_pcc))
+        arousal_pcc = np.append(arousal_pcc, compute_pcc(compress_labels(predicted[:, 0, 1]), compress_labels(y_test[:, 0, 1])))
+        print('Arousal PCC = {0}\n'.format(arousal_pcc))
 
         print('-----------------------------------------------')
 
@@ -280,5 +263,5 @@ if __name__ == '__main__':
     dropout = 0.5
     data_split = 0
 
-    # train(epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, data_split=data_split)
-    train(50, 1024, None, 1, 1, 0.5, 1e-5, split=0)
+    # train(epochs, lstm_cells, optimizer, batch_size, timesteps, dropout, split=data_split)
+    train(50, 1024, 'Adadelta', 1, 1, 0.5, 1e-5, split=5)

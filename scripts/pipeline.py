@@ -9,6 +9,9 @@ from helper.DatasetManager import compute_pcc
 from helper.DatasetManager import compress_labels
 from keras.models import load_model
 
+# PATHS
+model_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/model_11.h5'
+weights_path = '/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/weights_11.h5'
 
 video_input = '/home/uribernal/Desktop/data/dev/movies/'
 video_30fps_path = '/home/uribernal/Desktop/data/dev/resized_movies/'
@@ -26,7 +29,9 @@ extract_audio(input_vid, output_vid)
 # CONVERT VIDEO TO 30 FPS
 video_shape = (112, 112)
 output_vid = video_30fps_path + video_name + video_extension
-video_2_30fps(input_vid, output_vid, video_shape=video_shape)  # EXTRACT VIDEO FEATURES
+video_2_30fps(input_vid, output_vid, video_shape=video_shape)
+
+# EXTRACT VIDEO FEATURES
 video_features = extract_video_features(video_name, video_30fps_path)
 with h5py.File('/home/uribernal/Desktop/MediaEval2017/data/data/data/training_feat.h5', 'r') as hdf:
     y_test = np.array(hdf.get('dev/labels/' + video_name))
@@ -43,9 +48,7 @@ features = features.reshape(features.shape[0], 1, features.shape[1])
 print('Features: {0}\n'.format(features.shape))
 
 # PREDICT
-# model = get_model(summary=False)
-# predictions = model.predict(features)
-model = load_model('/home/uribernal/Desktop/model_1.3.h5')
+model = load_model('/home/uribernal/PycharmProjects/tfg-2017-oriol.bernal/results/models/model_11.h5')
 model.load_weights('/home/uribernal/Desktop/weights_1.3.h5')
 predictions = model.predict(features[:, :, :4096], batch_size=1)
 print('Predictions: {0}\n'.format(predictions.shape))
