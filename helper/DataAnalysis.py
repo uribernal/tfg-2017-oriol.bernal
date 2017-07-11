@@ -173,3 +173,8 @@ def plot_ground_truth_histograms(videos, db_path=None, plot=True, save_path=None
     if save_path is not None:
         plt.savefig(save_path + 'fear_histogram.png')
         plt.close()
+
+from helper import DatasetManager as Dm
+movies = Dm.get_movies_names()
+for movie in movies:
+    plot_valence_arousal_flow(movie, db_path=None, plot=False, save_path=None)
